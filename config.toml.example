@@ -1,0 +1,12 @@
+[node]
+grpc = ""
+grpc_secure_connection = true | false
+rpc = ""
+
+[wallet]
+validator_acc = ""
+
+[tg]
+enable = true | false
+token = ""
+chat_id = ""
