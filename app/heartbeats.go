@@ -2,21 +2,21 @@ package app
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 
 	"bharvest.io/axelmon/client/grpc"
 	"bharvest.io/axelmon/client/rpc"
+	"bharvest.io/axelmon/log"
+	"bharvest.io/axelmon/server"
 	"bharvest.io/axelmon/tg"
 	rewardTypes "github.com/axelarnetwork/axelar-core/x/reward/types"
 	tssTypes "github.com/axelarnetwork/axelar-core/x/tss/types"
 )
 
-func (c *Config) checkHeartbeat(ctx context.Context) error {
-	clientGRPC := grpc.New(c.Node.GRPC)
-	err := clientGRPC.Connect(ctx, c.Node.GRPCSecureConnection)
+func (c *Config) checkHeartbeats(ctx context.Context) error {
+	clientGRPC := grpc.New(c.General.GRPC)
+	err := clientGRPC.Connect(ctx, c.General.GRPCSecureConnection)
 	defer clientGRPC.Terminate(ctx)
 	if err != nil {
 		return err
@@ -27,34 +27,39 @@ func (c *Config) checkHeartbeat(ctx context.Context) error {
 		return err
 	}
 
-	n_heart := 3
-	cnt := 0
-	fmt.Println("=================== Heartbeat ===================")
-	fmt.Println("Broadcaster:", c.Wallet.Proxy.PrintAcc())
-	for i:=0; i<n_heart; i++ {
+	missCnt := 0
+	log.Info(fmt.Sprintf("Broadcaster: %s", c.Wallet.Proxy.PrintAcc()))
+	for i := 0; i < c.Heartbeat.CheckN; i++ {
 		isFound, err := c.findHeartbeat(ctx, clientGRPC, heartbeatHeight, 5)
 		if err != nil {
 			return err
 		}
 		heartbeatHeight -= 50
 
-		if isFound {
-			cnt++
+		if !isFound {
+			missCnt++
 		}
 	}
 
-	if cnt == n_heart-2 {
-		// # 2 heartbeats missing
-		tg.SendMsg("🛑 연속적인 heartbeat missing 발생%0A노드를 확인해주세요.")
+	server.GlobalState.Heartbeat.Missed = fmt.Sprintf("%d / %d", missCnt, c.Heartbeat.CheckN)
+	if missCnt >= c.Heartbeat.MissCnt {
+		server.GlobalState.Heartbeat.Status = false
+
+		tg.SendMsg("Heartbeat status: 🛑")
+		log.Info("Heartbeat status: 🛑")
 	} else {
-		fmt.Println("Heartbeat: 🟢")
+		server.GlobalState.Heartbeat.Status = true
+
+		log.Info("Heartbeat status: 🟢")
 	}
 
 	return nil
 }
 
 func (c *Config) findHeartbeat(ctx context.Context, clientGRPC *grpc.Client, heartbeatHeight int64, tryCnt int) (bool, error) {
-	for j:= 0; j<tryCnt; j++ {
+	for j := 0; j < tryCnt; j++ {
+		log.Info(fmt.Sprintf("Search heartbeat on height: %d", heartbeatHeight))
+
 		txs, err := clientGRPC.GetTxs(ctx, heartbeatHeight)
 		if err != nil {
 			return false, err
@@ -74,14 +79,7 @@ func (c *Config) findHeartbeat(ctx context.Context, clientGRPC *grpc.Client, hea
 							return false, err
 						}
 						if heartbeat.Sender.Equals(c.Wallet.Proxy.Acc) && len(heartbeat.KeyIDs) >= 1 {
-
-							hash := sha256.New()
-							hash.Write([]byte(fmt.Sprint(heartbeat.KeyIDs)))
-							md := hash.Sum(nil)
-							fmt.Println("hash: ", hex.EncodeToString(md))
-
-							fmt.Println("# signed:", len(heartbeat.KeyIDs))
-							fmt.Println("==============")
+							log.Info(fmt.Sprintf("Found and the number of signed: %d", len(heartbeat.KeyIDs)))
 							return true, nil
 						}
 					}
@@ -95,7 +93,7 @@ func (c *Config) findHeartbeat(ctx context.Context, clientGRPC *grpc.Client, hea
 }
 
 func (c *Config) findHeartBeatHeight(ctx context.Context) (int64, error) {
-	client, err := rpc.New(c.Node.RPC)
+	client, err := rpc.New(c.General.RPC)
 	if err != nil {
 		return 0, err
 	}
@@ -106,10 +104,10 @@ func (c *Config) findHeartBeatHeight(ctx context.Context) (int64, error) {
 	}
 
 	var heartbeatHeight int64
-	if height % 50 != 0 {
+	if height%50 != 0 {
 		heartbeatHeight = height - (height % 50) + 1
 	} else {
-		heartbeatHeight = heartbeatHeight-50 + 1
+		heartbeatHeight = heartbeatHeight - 50 + 1
 	}
 
 	return heartbeatHeight, nil

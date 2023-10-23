@@ -5,24 +5,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/rs/zerolog/log"
 )
 
 type TG struct {
-	enable bool
-	token string
+	enable  bool
+	title   string
+	token   string
 	chat_id string
 }
 type Body struct {
-	ChatID   string `json:"chat_id"`
-	Text     string `json:"text"`
+	ChatID    string `json:"chat_id"`
+	Text      string `json:"text"`
+	ParseMode string `json:"parse_mode"`
 }
 
 var tg TG
 var tgQueue chan func()
 
-func SetTg(enable bool, token string, chat_id string) {
+func SetTg(enable bool, title string, token string, chat_id string) {
 	if !enable {
 		return
 	}
@@ -32,6 +35,7 @@ func SetTg(enable bool, token string, chat_id string) {
 	tgQueue = make(chan func())
 	tg = TG{
 		enable,
+		title,
 		token,
 		chat_id,
 	}
@@ -53,15 +57,18 @@ func SendMsg(msg string) {
 		return
 	}
 
-	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage?parse_mode=MarkdownV2", tg.token)
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", tg.token)
 
+	msg = fmt.Sprintf("%s\n%s", tg.title, msg)
 	body := Body{
 		tg.chat_id,
 		msg,
+		"markdown",
 	}
+
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("")
+		log.Error().Err(err).Msg("\n" + string(debug.Stack()))
 		return
 	}
 	buff := bytes.NewBuffer(bodyBytes)
@@ -72,7 +79,7 @@ func SendMsg(msg string) {
 		buff,
 	)
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("")
+		log.Error().Err(err).Msg("\n" + string(debug.Stack()))
 		return
 	}
 	req.Header.Set("Content-type", "application/json")
@@ -82,13 +89,14 @@ func SendMsg(msg string) {
 	tg := func() {
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Error().Stack().Err(err).Msg("")
+			log.Error().Err(err).Msg("\n" + string(debug.Stack()))
+			return
 		}
 		defer resp.Body.Close()
 
-		fmt.Println(resp.Status)
 		if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
 			log.Error().Msg("Fail to seding msg from tg module")
+			return
 		}
 	}
 	enqueue(tg)

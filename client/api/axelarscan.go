@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
 
-func GetEVMVotes(chain string, size int, proxyAcc string) (*VotesResponse, error) {
+func (c *Client) GetEVMVotes(chain string, size int, proxyAcc string) (*VotesReturn, error) {
 	// VotesResponse MissCnt is byte type.
 	// Therefore, the maximum number of evm votes should be
 	// less than 256
@@ -26,7 +27,8 @@ func GetEVMVotes(chain string, size int, proxyAcc string) (*VotesResponse, error
 	}
 	reqBody := bytes.NewBuffer(reqBytes)
 
-	req, err := http.NewRequest("POST", "https://api.axelarscan.io/evm-polls", reqBody)
+	url := fmt.Sprintf("%s/evm-polls", c.axelarscan)
+	req, err := http.NewRequest("POST", url, reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +67,17 @@ func GetEVMVotes(chain string, size int, proxyAcc string) (*VotesResponse, error
 		return nil, err
 	}
 
-	result := VotesResponse{}
+	result := VotesReturn{}
 	result.Chain = chain
 	result.MissCnt = 0
 	result.VoteInfos = make([]VoteInfo, len(data))
 	for i, d := range(data) {
-		result.VoteInfos[i].InitiatedTXHash = d["initiated_txhash"].(string)
-		result.VoteInfos[i].PollID = d["id"].(string)
+		if d["initiated_txhash"] != nil {
+			result.VoteInfos[i].InitiatedTXHash = d["initiated_txhash"].(string)
+		}
+		if d["id"] != nil {
+			result.VoteInfos[i].PollID = d["id"].(string)
+		}
 
 		voter := d[proxyAcc]
 		if voter != nil {

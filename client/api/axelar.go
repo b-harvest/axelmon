@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-func GetProxyByVal(valoper string) (string, error) {
-	url := fmt.Sprintf("https://axelar-api.bharvest.io/query/snapshot/proxy/%s", valoper)
+func (c *Client) GetProxyByVal(valoper string) (string, error) {
+	url := fmt.Sprintf("%s/query/snapshot/proxy/%s", c.axelar, valoper)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err

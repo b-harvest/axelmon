@@ -1,38 +1,44 @@
 package api
 
-type VotesRequest struct {
-	Method string 	`json:"method"`
-	Chain  string 	`json:"chain"`
-	Size   int 		`json:"size"`
+type Client struct {
+	axelar     string
+	axelarscan string
 }
 
-type Voter struct {
-	Late      bool   `json:"late"`
-	CreatedAt int64  `json:"created_at"`
-	ID        string `json:"id"`
-	Voter     string `json:"voter"`
-	Type      string `json:"type"`
-	Vote      bool   `json:"vote"`
-	Confirmed bool   `json:"confirmed"`
-	Height    int    `json:"height"`
-}
+type (
+	VotesRequest struct {
+		Method string `json:"method"`
+		Chain  string `json:"chain"`
+		Size   int    `json:"size"`
+	}
 
-type VoteInfo struct {
-	InitiatedTXHash string
-	PollID string
-	IsLate bool
+	Voter struct {
+		Late      bool   `json:"late"`
+		CreatedAt int64  `json:"created_at"`
+		ID        string `json:"id"`
+		Voter     string `json:"voter"`
+		Type      string `json:"type"`
+		Vote      bool   `json:"vote"`
+		Confirmed bool   `json:"confirmed"`
+		Height    int    `json:"height"`
+	}
 
-	// 0 => not voted
-	// 1 => yes
-	// 2 => no
-	Vote byte
-}
+	VotesReturn struct {
+		Chain     string
+		MissCnt   int
+		VoteInfos []VoteInfo
+	}
+	VoteInfo struct {
+		InitiatedTXHash string
+		PollID          string
+		IsLate          bool
 
-type VotesResponse struct {
-	Chain string
-	MissCnt byte
-	VoteInfos []VoteInfo
-}
+		// 0 => not voted
+		// 1 => yes
+		// 2 => no
+		Vote byte
+	}
+)
 
 type Proxy struct {
 	Height string `json:"height"`

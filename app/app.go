@@ -2,22 +2,40 @@ package app
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"bharvest.io/axelmon/log"
 )
 
-func Run(ctx context.Context, c *Config) error {
-	err := c.checkMaintainers(ctx)
-	if err != nil {
-		log.Error(err)
-		return err
+type Monfunc func(ctx context.Context) (error)
+
+func Run(ctx context.Context, c *Config) {
+	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
+
+	monitoringFuncs := []Monfunc{
+		c.checkMaintainers,
+		c.checkHeartbeats,
+		c.checkEVMVotes,
 	}
 
-	err = c.checkHeartbeat(ctx)
-	if err != nil {
-		log.Error(err)
-		return err
+	wg := sync.WaitGroup{}
+	wg.Add(len(monitoringFuncs))
+
+	for _, f := range monitoringFuncs {
+		go func(monFunc Monfunc) {
+			defer wg.Done()
+
+			err := monFunc(ctx)
+			if err != nil {
+				log.Error(err)
+				return
+			}
+		}(f)
 	}
 
-	return nil
+	wg.Wait()
+	cancel()
+
+	return
 }

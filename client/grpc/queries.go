@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 
 	evmTypes "github.com/axelarnetwork/axelar-core/x/evm/types"
 	"github.com/axelarnetwork/axelar-core/x/nexus/exported"
@@ -47,6 +46,5 @@ func (c *Client) GetTxs(ctx context.Context, height int64) ([]*tx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(resp.Block.Header.Height)
 	return resp.Txs, nil
 }

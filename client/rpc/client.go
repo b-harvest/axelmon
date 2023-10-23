@@ -19,6 +19,7 @@ func New(host string) (*Client, error) {
 
 	return result, nil
 }
+
 func (c *Client) Connect(ctx context.Context) error {
 	// For websocket connection
 	err := c.RPCClient.Start()

@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -15,8 +16,8 @@ var eventQueue chan func()
 func init() {
 	// Logger setup
 	output := zerolog.ConsoleWriter{
-			Out: os.Stderr,
-			TimeFormat: time.RFC1123,
+		Out:        os.Stderr,
+		TimeFormat: time.RFC1123,
 	}
 	log.Logger = log.Output(output)
 
@@ -45,8 +46,9 @@ func Info(msg string) {
 }
 
 func Error(err error) {
+	stack := string(debug.Stack())
 	event := func() {
-		log.Error().Stack().Err(err).Msg("")
+		log.Error().Err(err).Msg("\n" + stack)
 	}
 	enqueue(event)
 }
