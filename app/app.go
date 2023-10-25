@@ -11,7 +11,7 @@ import (
 type Monfunc func(ctx context.Context) (error)
 
 func Run(ctx context.Context, c *Config) {
-	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 
 	monitoringFuncs := []Monfunc{
 		c.checkMaintainers,

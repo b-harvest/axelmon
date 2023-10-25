@@ -36,4 +36,5 @@ miss_cnt = 5
 
 # Chains you don't want to monitor.
 # If empty, all evm votes will be monitored.
-except_chains = "aurora"
+# Example) "aurora, ethereum"
+except_chains = ""
