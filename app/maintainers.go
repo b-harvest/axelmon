@@ -34,18 +34,25 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 				result[chain.String()] = true
 			}
 		}
+
+		if !result[chain.String()] {
+			result[chain.String()] = false
+		}
 	}
 
 	check := true
-	msg := "Maintainer list: "
+	msg := "Maintainers status: "
 	for k, v := range result {
 		msg += fmt.Sprintf("(%s: %v) ", k, v)
 		if v == false {
-			m := fmt.Sprint("Maintainer status(): 🛑", k)
-			tg.SendMsg(m)
 			check = false
+
+			m := fmt.Sprintf("Maintainer status(%s): 🛑", k)
+			log.Info(m)
+			tg.SendMsg(m)
 		}
 	}
+	log.Info(msg)
 
 	server.GlobalState.Maintainers.Maintainer = result
 	if check {

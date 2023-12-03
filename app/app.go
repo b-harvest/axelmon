@@ -12,6 +12,7 @@ type Monfunc func(ctx context.Context) (error)
 
 func Run(ctx context.Context, c *Config) {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
+	defer cancel()
 
 	monitoringFuncs := []Monfunc{
 		c.checkMaintainers,
@@ -35,7 +36,6 @@ func Run(ctx context.Context, c *Config) {
 	}
 
 	wg.Wait()
-	cancel()
 
 	return
 }
