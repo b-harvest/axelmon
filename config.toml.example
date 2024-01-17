@@ -7,6 +7,11 @@ period = 60
 
 validator_acc = "axelar123..."
 
+# Chains you don't want to monitor.
+# If empty, all evm votes will be monitored.
+# e.g. "aurora, ethereum"
+except_chains = ""
+
 rpc = "https://axelar-rpc...:443"
 api = "https://axelar-api...:443"
 
@@ -33,8 +38,3 @@ check_n = 10
 
 # If a votes is missed for more than miss_cnt, an alarm will triggered.
 miss_cnt = 5
-
-# Chains you don't want to monitor.
-# If empty, all evm votes will be monitored.
-# Example) "aurora, ethereum"
-except_chains = ""

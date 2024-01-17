@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"bharvest.io/axelmon/client/grpc"
@@ -89,7 +88,7 @@ func (c *Config) findHeartbeat(ctx context.Context, clientGRPC *grpc.Client, hea
 		heartbeatHeight++
 	}
 
-	return false, errors.New(fmt.Sprintf("Didn't heartbeat signal on height: %d", heartbeatHeight))
+	return false, nil
 }
 
 func (c *Config) findHeartBeatHeight(ctx context.Context) (int64, error) {

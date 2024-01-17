@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"bharvest.io/axelmon/client/grpc"
 	"bharvest.io/axelmon/log"
@@ -25,6 +26,13 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 
 	result := make(map[string]bool)
 	for _, chain := range chains {
+		// If chain is included in except chains
+		// then don't monitor that chain's maintainers.
+		if c.General.ExceptChains[strings.ToLower(chain.String())] {
+			result[chain.String()] = true
+			continue
+		}
+
 		maintainers, err := client.GetChainMaintainers(ctx, chain.String())
 		if err != nil {
 			return err

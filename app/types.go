@@ -6,6 +6,8 @@ type Config struct {
 	General struct {
 		Network              string `toml:"network"`
 		Period               uint   `toml:"period"`
+		ExceptChainsString   string `toml:"except_chains"`
+		ExceptChains         map[string]bool
 		ValidatorAcc         string `toml:"validator_acc"`
 		RPC                  string `toml:"rpc"`
 		API                  string `toml:"api"`
@@ -28,9 +30,7 @@ type Config struct {
 		MissCnt int `toml:"miss_cnt"`
 	} `toml:"heartbeat"`
 	EVMVote struct {
-		CheckN             int    `toml:"check_n"`
-		MissCnt            int    `toml:"miss_cnt"`
-		ExceptChainsString string `toml:"except_chains"`
-		ExceptChains       map[string]bool
+		CheckN  int `toml:"check_n"`
+		MissCnt int `toml:"miss_cnt"`
 	} `toml:"evm_vote"`
 }

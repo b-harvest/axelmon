@@ -7,7 +7,7 @@ type VotesInfo struct {
 
 type Response struct {
 	Maintainers struct {
-		Status      bool `json:"status"`
+		Status     bool            `json:"status"`
 		Maintainer map[string]bool `json:"maintainer"`
 	} `json:"maintainers"`
 
@@ -19,5 +19,4 @@ type Response struct {
 	EVMVotes struct {
 		Chain map[string]VotesInfo `json:"chain"`
 	} `json:"EVMVotes"`
-	
 }

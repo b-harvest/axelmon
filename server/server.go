@@ -12,7 +12,6 @@ var GlobalState Response
 
 func Run(listenPort int) {
 	GlobalState = Response{}
-	GlobalState.EVMVotes.Chain = make(map[string]VotesInfo)
 
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")

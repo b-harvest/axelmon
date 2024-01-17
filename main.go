@@ -63,14 +63,14 @@ func main() {
 	tgTitle := fmt.Sprintf("🤖 Axelmon for %s 🤖", cfg.General.Network)
 	tg.SetTg(cfg.Tg.Enable, tgTitle, cfg.Tg.Token, cfg.Tg.ChatID)
 
-	cfg.EVMVote.ExceptChains = map[string]bool{}
-	exceptChains := strings.Split(strings.ReplaceAll(cfg.EVMVote.ExceptChainsString, " ", ""), ",")
+	cfg.General.ExceptChains = map[string]bool{}
+	exceptChains := strings.Split(strings.ReplaceAll(cfg.General.ExceptChainsString, " ", ""), ",")
 	for _, exceptChain := range exceptChains {
-		cfg.EVMVote.ExceptChains[strings.ToLower(exceptChain)] = true
+		cfg.General.ExceptChains[strings.ToLower(exceptChain)] = true
 	}
 
+	go server.Run(cfg.General.ListenPort)
 	for {
-		go server.Run(cfg.General.ListenPort)
 		app.Run(ctx, &cfg)
 		time.Sleep(time.Duration(cfg.General.Period) * time.Minute)
 	}
