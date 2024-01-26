@@ -31,13 +31,13 @@ func (c *Config) checkHeartbeats(ctx context.Context) error {
 	for i := 0; i < c.Heartbeat.CheckN; i++ {
 		isFound, err := c.findHeartbeat(ctx, clientGRPC, heartbeatHeight, 5)
 		if err != nil {
-			return err
+			log.Debug(err)
 		}
-		heartbeatHeight -= 50
-
 		if !isFound {
 			missCnt++
 		}
+
+		heartbeatHeight -= 50
 	}
 
 	server.GlobalState.Heartbeat.Missed = fmt.Sprintf("%d / %d", missCnt, c.Heartbeat.CheckN)
