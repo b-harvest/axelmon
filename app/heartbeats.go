@@ -61,7 +61,8 @@ func (c *Config) findHeartbeat(ctx context.Context, clientGRPC *grpc.Client, hea
 
 		txs, err := clientGRPC.GetTxs(ctx, heartbeatHeight)
 		if err != nil {
-			return false, err
+			// For avoid count as miss for can't fetch txs, return true
+			return true, err
 		}
 		for _, tx := range txs {
 			for _, msg := range tx.Body.Messages {
