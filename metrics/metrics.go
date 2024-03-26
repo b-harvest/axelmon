@@ -16,8 +16,8 @@ var (
 
 	MaintainersGauge = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "maintainers_list",
-			Help: "List of Maintainers",
+			Name: "maintainers_status_list",
+			Help: "Maintainer's status, 1 is active, 0 is not active",
 		},
 		[]string{"network_name"},
 	)
@@ -25,7 +25,7 @@ var (
 	HeartbeatsCounter = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "heartbeats_total",
-			Help: "List of Maintainers",
+			Help: "Heartbeat of the application",
 		},
 		[]string{"status"},
 	)

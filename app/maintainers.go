@@ -53,7 +53,7 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 		if result[chain.String()] {
 			maintainerInNetwork = 1
 		} else {
-			maintainerInNetwork = 2
+			maintainerInNetwork = 0
 		}
 		metrics.MaintainersGauge.With(prometheus.Labels{"network_name": chain.String()}).Set(float64(maintainerInNetwork))
 	}

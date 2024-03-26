@@ -70,8 +70,13 @@ func (c *Client) GetEVMVotes(chain string, size int, proxyAcc string) (*VotesRet
 	result := VotesReturn{}
 	result.Chain = chain
 	result.MissCnt = 0
+	if total, ok := res["total"].(float64); ok {
+		result.TotalVotes = total
+	} else {
+		result.TotalVotes = 0
+	}
 	result.VoteInfos = make([]VoteInfo, len(data))
-	for i, d := range(data) {
+	for i, d := range data {
 		if d["initiated_txhash"] != nil {
 			result.VoteInfos[i].InitiatedTXHash = d["initiated_txhash"].(string)
 		}
