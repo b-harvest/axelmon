@@ -7,8 +7,10 @@ import (
 
 	"bharvest.io/axelmon/client/grpc"
 	"bharvest.io/axelmon/log"
+	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
 	"bharvest.io/axelmon/tg"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func (c *Config) checkMaintainers(ctx context.Context) error {
@@ -46,6 +48,14 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 		if !result[chain.String()] {
 			result[chain.String()] = false
 		}
+
+		var maintainerInNetwork int
+		if result[chain.String()] {
+			maintainerInNetwork = 1
+		} else {
+			maintainerInNetwork = 2
+		}
+		metrics.MaintainersGauge.With(prometheus.Labels{"network_name": chain.String()}).Set(float64(maintainerInNetwork))
 	}
 
 	check := true
