@@ -7,10 +7,12 @@ import (
 	"bharvest.io/axelmon/client/grpc"
 	"bharvest.io/axelmon/client/rpc"
 	"bharvest.io/axelmon/log"
+	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
 	"bharvest.io/axelmon/tg"
 	rewardTypes "github.com/axelarnetwork/axelar-core/x/reward/types"
 	tssTypes "github.com/axelarnetwork/axelar-core/x/tss/types"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func (c *Config) checkHeartbeats(ctx context.Context) error {
@@ -41,6 +43,8 @@ func (c *Config) checkHeartbeats(ctx context.Context) error {
 	}
 
 	server.GlobalState.Heartbeat.Missed = fmt.Sprintf("%d / %d", missCnt, c.Heartbeat.CheckN)
+	metrics.HeartbeatsCounter.With(prometheus.Labels{"status": "missed"}).Add(float64(missCnt))
+	metrics.HeartbeatsCounter.With(prometheus.Labels{"status": "success"}).Add(float64(c.Heartbeat.CheckN - missCnt))
 	if missCnt >= c.Heartbeat.MissCnt {
 		server.GlobalState.Heartbeat.Status = false
 

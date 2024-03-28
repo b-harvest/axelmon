@@ -24,9 +24,10 @@ type (
 	}
 
 	VotesReturn struct {
-		Chain     string
-		MissCnt   int
-		VoteInfos []VoteInfo
+		Chain      string
+		MissCnt    int
+		VoteInfos  []VoteInfo
+		TotalVotes float64
 	}
 	VoteInfo struct {
 		InitiatedTXHash string

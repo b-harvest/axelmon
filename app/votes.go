@@ -8,8 +8,10 @@ import (
 	"bharvest.io/axelmon/client/api"
 	"bharvest.io/axelmon/client/grpc"
 	"bharvest.io/axelmon/log"
+	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
 	"bharvest.io/axelmon/tg"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func (c *Config) checkEVMVotes(ctx context.Context) error {
@@ -41,6 +43,14 @@ func (c *Config) checkEVMVotes(ctx context.Context) error {
 		}
 
 		votesInfo.Missed = fmt.Sprintf("%d / %d", resp.MissCnt, c.EVMVote.CheckN)
+		metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "missed"}).Add(float64(resp.MissCnt))
+		// check if the total number of votes is higher than the number of votes checked
+		if resp.TotalVotes < float64(c.EVMVote.CheckN) {
+			metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "success"}).Add(float64(resp.TotalVotes - float64(resp.MissCnt)))
+		} else {
+			metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "success"}).Add(float64(c.EVMVote.CheckN - resp.MissCnt))
+		}
+
 		if resp.MissCnt >= c.EVMVote.MissCnt {
 			votesInfo.Status = false
 
