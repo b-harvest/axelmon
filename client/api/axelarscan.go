@@ -9,7 +9,14 @@ import (
 	"net/http"
 )
 
-func (c *Client) GetEVMVotes(chain string, size int, proxyAcc string) (*VotesReturn, error) {
+type PollingType string
+
+const (
+	EVM_POLLING_TYPE PollingType = "evm-polls"
+	VM_POLLING_TYPE  PollingType = "vm-polls"
+)
+
+func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollingType PollingType) (*VotesReturn, error) {
 	// VotesResponse MissCnt is byte type.
 	// Therefore, the maximum number of evm votes should be
 	// less than 256
@@ -27,7 +34,7 @@ func (c *Client) GetEVMVotes(chain string, size int, proxyAcc string) (*VotesRet
 	}
 	reqBody := bytes.NewBuffer(reqBytes)
 
-	url := fmt.Sprintf("%s/evm-polls", c.axelarscan)
+	url := fmt.Sprintf("%s/%s", c.axelarscan, pollingType)
 	req, err := http.NewRequest("POST", url, reqBody)
 	if err != nil {
 		return nil, err

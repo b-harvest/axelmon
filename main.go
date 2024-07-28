@@ -24,7 +24,7 @@ func main() {
 	ctx := context.Background()
 
 	cfgPath := flag.String("config", "", "Config file")
-    flag.Parse()
+	flag.Parse()
 	if *cfgPath == "" {
 		panic("Error: Please input config file path with -config flag.")
 	}
@@ -54,10 +54,15 @@ func main() {
 		log.Error(err)
 		panic(err)
 	}
-	cfg.Wallet.Proxy, err = wallet.NewWallet(ctx, proxyAcc)
-	if err != nil {
-		log.Error(err)
-		panic(err)
+
+	if proxyAcc != "" {
+		cfg.Wallet.Proxy, err = wallet.NewWallet(ctx, proxyAcc)
+		if err != nil {
+			log.Error(err)
+			panic(err)
+		}
+	} else {
+		log.Warn("Cannot fetch proxy acc. it may occur errors while retrieving voting infos.")
 	}
 
 	tgTitle := fmt.Sprintf("🤖 Axelmon for %s 🤖", cfg.General.Network)

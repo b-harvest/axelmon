@@ -15,6 +15,14 @@ import (
 )
 
 func (c *Config) checkEVMVotes(ctx context.Context) error {
+	return c.checkPollingVotes(ctx, api.EVM_POLLING_TYPE)
+}
+
+func (c *Config) checkVMVotes(ctx context.Context) error {
+	return c.checkPollingVotes(ctx, api.VM_POLLING_TYPE)
+}
+
+func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingType) error {
 	client := grpc.New(c.General.GRPC)
 	err := client.Connect(ctx, c.General.GRPCSecureConnection)
 	defer client.Terminate(ctx)
@@ -37,30 +45,30 @@ func (c *Config) checkEVMVotes(ctx context.Context) error {
 
 		votesInfo := server.VotesInfo{}
 
-		resp, err := api.C.GetEVMVotes(chain.String(), c.EVMVote.CheckN, c.Wallet.Proxy.PrintAcc())
+		resp, err := api.C.GetPollingVotes(chain.String(), c.PollingVote.CheckN, c.Wallet.Proxy.PrintAcc(), pollingType)
 		if err != nil {
 			return err
 		}
 
-		votesInfo.Missed = fmt.Sprintf("%d / %d", resp.MissCnt, c.EVMVote.CheckN)
+		votesInfo.Missed = fmt.Sprintf("%d / %d", resp.MissCnt, c.PollingVote.CheckN)
 		metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "missed"}).Add(float64(resp.MissCnt))
 		// check if the total number of votes is higher than the number of votes checked
-		if resp.TotalVotes < float64(c.EVMVote.CheckN) {
+		if resp.TotalVotes < float64(c.PollingVote.CheckN) {
 			metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "success"}).Add(float64(resp.TotalVotes - float64(resp.MissCnt)))
 		} else {
-			metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "success"}).Add(float64(c.EVMVote.CheckN - resp.MissCnt))
+			metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "success"}).Add(float64(c.PollingVote.CheckN - resp.MissCnt))
 		}
 
-		if resp.MissCnt >= c.EVMVote.MissCnt {
+		if resp.MissCnt >= c.PollingVote.MissCnt {
 			votesInfo.Status = false
 
-			msg := fmt.Sprintf("EVM votes status(%s): 🛑", chain)
+			msg := fmt.Sprintf("%s status(%s): 🛑", pollingType, chain)
 			tg.SendMsg(msg)
 			log.Info(msg)
 		} else {
 			votesInfo.Status = true
 
-			msg := fmt.Sprintf("EVM votes status(%s): 🟢", chain)
+			msg := fmt.Sprintf("%s status(%s): 🟢", pollingType, chain)
 			log.Info(msg)
 		}
 		result[chain.String()] = votesInfo
