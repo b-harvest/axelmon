@@ -45,6 +45,13 @@ func Info(msg string) {
 	enqueue(event)
 }
 
+func Warn(msg string) {
+	event := func() {
+		log.Warn().Msg(msg)
+	}
+	enqueue(event)
+}
+
 func Error(err error) {
 	stack := string(debug.Stack())
 	event := func() {
