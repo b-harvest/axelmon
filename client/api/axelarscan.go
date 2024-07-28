@@ -12,8 +12,8 @@ import (
 type PollingType string
 
 const (
-	EVM_POLLING_TYPE PollingType = "evm-polls"
-	VM_POLLING_TYPE  PollingType = "vm-polls"
+	EVM_POLLING_TYPE PollingType = "searchPolls"
+	VM_POLLING_TYPE  PollingType = "searchVMPolls"
 )
 
 func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollingType PollingType) (*VotesReturn, error) {
@@ -25,7 +25,7 @@ func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollin
 	}
 
 	reqBytes, err := json.Marshal(VotesRequest{
-		"searchPolls",
+		string(pollingType),
 		chain,
 		size,
 	})
@@ -34,7 +34,7 @@ func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollin
 	}
 	reqBody := bytes.NewBuffer(reqBytes)
 
-	url := fmt.Sprintf("%s/%s", c.axelarscan, pollingType)
+	url := fmt.Sprintf("%s/validator/%s", c.axelarscan, pollingType)
 	req, err := http.NewRequest("POST", url, reqBody)
 	if err != nil {
 		return nil, err
