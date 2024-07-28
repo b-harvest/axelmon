@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/axelarnetwork/axelar-core/x/nexus/exported"
 	"strings"
 
 	"bharvest.io/axelmon/client/api"
@@ -15,14 +16,6 @@ import (
 )
 
 func (c *Config) checkEVMVotes(ctx context.Context) error {
-	return c.checkPollingVotes(ctx, api.EVM_POLLING_TYPE)
-}
-
-func (c *Config) checkVMVotes(ctx context.Context) error {
-	return c.checkPollingVotes(ctx, api.VM_POLLING_TYPE)
-}
-
-func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingType) error {
 	client := grpc.New(c.General.GRPC)
 	err := client.Connect(ctx, c.General.GRPCSecureConnection)
 	defer client.Terminate(ctx)
@@ -34,6 +27,19 @@ func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingT
 	if err != nil {
 		return err
 	}
+
+	return c.checkPollingVotes(ctx, api.EVM_POLLING_TYPE, chains)
+}
+
+func (c *Config) checkVMVotes(ctx context.Context) error {
+	chains, err := api.C.GetVerifierSupportedChains(c.Wallet.Proxy.PrintAcc())
+	if err != nil {
+		return err
+	}
+	return c.checkPollingVotes(ctx, api.VM_POLLING_TYPE, chains)
+}
+
+func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingType, chains []exported.ChainName) error {
 
 	result := make(map[string]server.VotesInfo)
 	for _, chain := range chains {
