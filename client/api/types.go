@@ -48,3 +48,8 @@ type Proxy struct {
 		Status  string `json:"status"`
 	} `json:"result"`
 }
+
+type VerifierAccount struct {
+	Address         string   `json:"address"`
+	SupportedChains []string `json:"supportedChains"`
+}

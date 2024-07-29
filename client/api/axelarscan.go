@@ -5,11 +5,73 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/axelarnetwork/axelar-core/x/nexus/exported"
 	"io"
 	"net/http"
 )
 
-func (c *Client) GetEVMVotes(chain string, size int, proxyAcc string) (*VotesReturn, error) {
+type PollingType string
+
+const (
+	EVM_POLLING_TYPE PollingType = "searchPolls"
+	VM_POLLING_TYPE  PollingType = "searchVMPolls"
+)
+
+func (c *Client) GetVerifierSupportedChains(proxyAcc string) ([]exported.ChainName, error) {
+	url := fmt.Sprintf("%s/validator/getVerifiers", c.axelarscan)
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New("Failed to get proper data from axelarscan")
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var res map[string]any
+	err = json.Unmarshal(bodyBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	dataBytes, err := json.Marshal(res["data"])
+	if err != nil {
+		return nil, err
+	}
+
+	var data []VerifierAccount
+	err = json.Unmarshal(dataBytes, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, d := range data {
+		if d.Address == proxyAcc {
+			var result []exported.ChainName
+			for _, chainName := range d.SupportedChains {
+				result = append(result, exported.ChainName(chainName))
+			}
+			return result, nil
+		}
+	}
+	return nil, errors.New("didnt' found any verifier matched with your Acc -> " + proxyAcc)
+}
+
+func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollingType PollingType) (*VotesReturn, error) {
 	// VotesResponse MissCnt is byte type.
 	// Therefore, the maximum number of evm votes should be
 	// less than 256
@@ -18,7 +80,7 @@ func (c *Client) GetEVMVotes(chain string, size int, proxyAcc string) (*VotesRet
 	}
 
 	reqBytes, err := json.Marshal(VotesRequest{
-		"searchPolls",
+		string(pollingType),
 		chain,
 		size,
 	})
@@ -27,7 +89,7 @@ func (c *Client) GetEVMVotes(chain string, size int, proxyAcc string) (*VotesRet
 	}
 	reqBody := bytes.NewBuffer(reqBytes)
 
-	url := fmt.Sprintf("%s/evm-polls", c.axelarscan)
+	url := fmt.Sprintf("%s/validator/%s", c.axelarscan, pollingType)
 	req, err := http.NewRequest("POST", url, reqBody)
 	if err != nil {
 		return nil, err

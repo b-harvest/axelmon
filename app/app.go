@@ -8,16 +8,33 @@ import (
 	"bharvest.io/axelmon/log"
 )
 
-type Monfunc func(ctx context.Context) (error)
+type Monfunc func(ctx context.Context) error
 
 func Run(ctx context.Context, c *Config) {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 	defer cancel()
 
-	monitoringFuncs := []Monfunc{
-		c.checkMaintainers,
-		c.checkHeartbeats,
-		c.checkEVMVotes,
+	var monitoringFuncs []Monfunc
+
+	if len(c.General.TargetSvcs) == 0 {
+		monitoringFuncs = []Monfunc{c.checkMaintainers, c.checkHeartbeats, c.checkEVMVotes}
+	} else {
+		for _, targetSvc := range c.General.TargetSvcs {
+			switch targetSvc {
+			case MaintainerTargetSvc:
+				monitoringFuncs = append(monitoringFuncs, c.checkMaintainers)
+				break
+			case HeartbeatTargetSvc:
+				monitoringFuncs = append(monitoringFuncs, c.checkHeartbeats)
+				break
+			case EVMVoteTargetSvc:
+				monitoringFuncs = append(monitoringFuncs, c.checkEVMVotes)
+				break
+			case VMVoteTargetSvc:
+				monitoringFuncs = append(monitoringFuncs, c.checkVMVotes)
+				break
+			}
+		}
 	}
 
 	wg := sync.WaitGroup{}

@@ -9,11 +9,11 @@ func Set(network string, axelarAPI string) {
 	} else if network == "testnet" {
 		axelarscan = "https://testnet.api.axelarscan.io:443"
 	} else {
-		panic("You must input mainnet or testnet to network field in your config.")
+		axelarscan = network
 	}
 
 	C = &Client{
-		axelar: axelarAPI,
+		axelar:     axelarAPI,
 		axelarscan: axelarscan,
 	}
 }
