@@ -13,10 +13,8 @@ import (
 
 var GlobalState *Response
 
-const STATE_FILE_PATH = ".axelmon-state.json"
-
-func Run(listenPort int) {
-	sf, e := os.OpenFile(STATE_FILE_PATH, os.O_RDONLY, 0600)
+func Run(listenPort int, stateFile string) {
+	sf, e := os.OpenFile(stateFile, os.O_RDONLY, 0600)
 	if e != nil {
 		log.Warn(e.Error())
 	}

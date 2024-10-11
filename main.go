@@ -30,6 +30,9 @@ func main() {
 		panic("Error: Please input config file path with -config flag.")
 	}
 
+	stateFilePath := flag.String("state", ".axelmon-state.json", "state file")
+	flag.Parse()
+
 	f, err := os.ReadFile(*cfgPath)
 	if err != nil {
 		log.Error(err)
@@ -85,7 +88,7 @@ func main() {
 
 	cfg.Ctx = ctx
 
-	go server.Run(cfg.General.ListenPort)
+	go server.Run(cfg.General.ListenPort, *stateFilePath)
 
 	quitting := make(chan os.Signal, 1)
 	signal.Notify(quitting, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -105,11 +108,11 @@ func main() {
 	for {
 		select {
 		case <-ctx.Done():
-			app.SaveOnExit(server.STATE_FILE_PATH)
+			app.SaveOnExit(*stateFilePath)
 			return
 		case <-quitting:
 			cancel()
-			app.SaveOnExit(server.STATE_FILE_PATH)
+			app.SaveOnExit(*stateFilePath)
 			return
 		case <-ticker.C:
 			go app.Run(ctx, &cfg)
