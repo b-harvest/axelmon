@@ -188,7 +188,10 @@ func (c *Config) alert(message string, resolved, notSend bool) {
 			}
 		}
 
-		resendDuration := time.Duration(*c.Alerts.ResendDuration)
+		resendDuration := time.Hour * 24
+		if c.Alerts.ResendDuration != nil {
+			resendDuration = time.Duration(*c.Alerts.ResendDuration)
+		}
 		a := &alertMsg{
 			tg:             c.Alerts.Tg.Enabled,
 			slk:            c.Alerts.Slack.Enabled,
