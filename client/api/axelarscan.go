@@ -148,6 +148,12 @@ func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollin
 			result.VoteInfos[i].PollID = d["id"].(string)
 		}
 
+		if time.Unix(int64(d["created_at"].(map[string]any)["ms"].(float64)/1000), 0).Before(now.Add(-1 * checkPeriod)) {
+			// it's too old record. skip it.
+			log.Debug("skipping... it's too old")
+			continue
+		}
+
 		voter := d[proxyAcc]
 		if voter != nil {
 			voteInfoBytes, err := json.Marshal(voter)
@@ -161,12 +167,6 @@ func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollin
 				return nil, err
 			}
 
-			timestampInSeconds := voteInfo.CreatedAt / 1000
-			if time.Unix(timestampInSeconds, 0).Before(now.Add(-1 * checkPeriod)) {
-				// it's too old record. skip it.
-				log.Debug("skipping... it's too old")
-				continue
-			}
 			result.VoteInfos[i].IsLate = voteInfo.Late
 
 			if voteInfo.Vote {
