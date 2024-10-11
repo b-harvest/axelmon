@@ -90,7 +90,16 @@ func main() {
 	quitting := make(chan os.Signal, 1)
 	signal.Notify(quitting, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
-	ticker := time.NewTicker(time.Duration(cfg.General.Period) * time.Minute)
+	period := time.Hour
+	if cfg.General.Period != nil {
+		customPeriod := time.Duration(*cfg.General.Period)
+		if customPeriod < time.Minute {
+			log.Warn(fmt.Sprintf("general.period is too low. %v. it'll set as defaultValue(%v)", customPeriod, period))
+		}
+		period = customPeriod
+	}
+
+	ticker := time.NewTicker(period)
 	go app.Run(ctx, &cfg)
 
 	for {
