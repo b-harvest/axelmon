@@ -80,6 +80,9 @@ func notifySlack(msg *alertMsg) (err error) {
 	if !msg.slk {
 		return
 	}
+	if !shouldNotify(msg, slk) {
+		return nil
+	}
 	data, err := json.Marshal(buildSlackMessage(msg))
 	if err != nil {
 		return
@@ -165,22 +168,30 @@ func notifyTg(msg *alertMsg) (err error) {
 func (c *Config) alert(message string, resolved, notSend bool) {
 	prefix := "🛑 "
 	if resolved {
-		prefix = "🟢 Healthy: "
+		prefix = "🟢 Healthy "
 	}
 
 	log.Info(fmt.Sprintf("%s %s", prefix, message))
 
 	if !notSend {
 		c.alertMux.RLock()
+		mentions := ""
+		for _, m := range c.Alerts.Slack.Mentions {
+			if m[:1] != "@" {
+				mentions = fmt.Sprintf("%s @%s", mentions, m)
+			}
+		}
+
 		a := &alertMsg{
-			tg:         c.Alerts.Tg.Enabled,
-			slk:        c.Alerts.Slack.Enabled,
-			resolved:   resolved,
-			message:    message,
-			tgChannel:  c.Alerts.Tg.ChatID,
-			tgKey:      c.Alerts.Tg.Token,
-			tgMentions: strings.Join(c.Alerts.Tg.Mentions, " "),
-			slkHook:    c.Alerts.Slack.Webhook,
+			tg:          c.Alerts.Tg.Enabled,
+			slk:         c.Alerts.Slack.Enabled,
+			resolved:    resolved,
+			message:     message,
+			tgChannel:   c.Alerts.Tg.ChatID,
+			tgKey:       c.Alerts.Tg.Token,
+			tgMentions:  strings.Join(c.Alerts.Tg.Mentions, " "),
+			slkHook:     c.Alerts.Slack.Webhook,
+			slkMentions: mentions,
 		}
 		c.alertChan <- a
 		c.alertMux.RUnlock()
