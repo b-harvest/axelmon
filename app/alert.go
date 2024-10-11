@@ -178,7 +178,7 @@ func (c *Config) alert(message string, resolved, notSend bool) {
 		mentions := ""
 		for _, m := range c.Alerts.Slack.Mentions {
 			if m[:1] != "@" {
-				mentions = fmt.Sprintf("%s @%s", mentions, m)
+				mentions = fmt.Sprintf("%s <@%s>", mentions, m)
 			}
 		}
 
