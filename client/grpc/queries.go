@@ -10,6 +10,8 @@ import (
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
+// GetChainMaintainers fetch maintainers on specific chain.
+// and this feature only apply to validator external chain support.(not amplifier)
 func (c *Client) GetChainMaintainers(ctx context.Context, chain string) ([]sdkTypes.ValAddress, error) {
 	resp, err := c.nexusQueryServiceClient.ChainMaintainers(
 		ctx,

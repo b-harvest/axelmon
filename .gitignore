@@ -2,3 +2,4 @@
 
 *.toml
 .idea/
+.axelmon-state.json
