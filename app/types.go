@@ -32,7 +32,7 @@ type Config struct {
 			Mentions []string `toml:"mentions"`
 		} `toml:"telegram"`
 		Slack struct {
-			Enabled  bool     `toml:"enabled"`
+			Enabled  bool     `toml:"enable"`
 			Webhook  string   `toml:"webhook"`
 			Mentions []string `toml:"mentions"`
 		} `toml:"slack"`

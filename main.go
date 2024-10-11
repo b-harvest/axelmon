@@ -69,7 +69,7 @@ func main() {
 			panic(err)
 		}
 	} else {
-		log.Warn("Cannot fetch proxy acc. it may occur errors while retrieving voting infos.")
+		log.Warn("Cannot fetch proxy acc. it may cause error while retrieving voting infos.")
 		cfg.Wallet.Proxy = cfg.Wallet.Validator
 		if err != nil {
 			log.Error(err)
