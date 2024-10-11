@@ -130,7 +130,6 @@ func buildSlackMessage(msg *alertMsg) *SlackMessage {
 	prefix := "🛑 "
 
 	if msg.resolved {
-		msg.message = "OK: " + msg.message
 		prefix = "🟢 Healthy: "
 		color = "good"
 	}
@@ -177,6 +176,17 @@ func (c *Config) alert(message string, resolved, notSend bool) {
 		prefix = "🟢 Healthy "
 	}
 
+	network := c.General.Network
+	if len(network) >= 10 {
+		parts := strings.Split(network, "//")
+		if len(parts) < 2 {
+			network = network[:10]
+		} else {
+			network = parts[1]
+		}
+	}
+
+	message = fmt.Sprintf("[%s]: %s", network, message)
 	log.Info(fmt.Sprintf("%s %s", prefix, message))
 
 	if !notSend {

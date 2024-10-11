@@ -68,7 +68,7 @@ func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingT
 			metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "success"}).Add(resp.TotalVotes - float64(resp.MissCnt))
 		}
 
-		if float64(resp.MissCnt)/resp.TotalVotes > float64(c.PollingVote.MissPercentage) {
+		if (float64(resp.MissCnt)/resp.TotalVotes)*100 > float64(c.PollingVote.MissPercentage) {
 			votesInfo.Status = false
 
 			msg := fmt.Sprintf("%s status(%s)", pollingType, chain)
