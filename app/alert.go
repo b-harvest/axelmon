@@ -157,7 +157,7 @@ func notifyTg(msg *alertMsg) (err error) {
 		return
 	}
 
-	mc := tgbotapi.NewMessageToChannel(msg.tgChannel, fmt.Sprintf("%s - %s %s", "🤖 Axelmon", prefix, msg.message))
+	mc := tgbotapi.NewMessageToChannel(msg.tgChannel, fmt.Sprintf("%s - %s %s\n%s", "🤖 Axelmon", prefix, msg.message, msg.tgMentions))
 	_, err = bot.Send(mc)
 	if err != nil {
 		log.Error(errors.New(fmt.Sprintf("telegram send: %v", err)))
