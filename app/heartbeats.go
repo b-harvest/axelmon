@@ -9,7 +9,6 @@ import (
 	"bharvest.io/axelmon/log"
 	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
-	"bharvest.io/axelmon/tg"
 	rewardTypes "github.com/axelarnetwork/axelar-core/x/reward/types"
 	tssTypes "github.com/axelarnetwork/axelar-core/x/tss/types"
 	"github.com/prometheus/client_golang/prometheus"
@@ -48,12 +47,11 @@ func (c *Config) checkHeartbeats(ctx context.Context) error {
 	if missCnt >= c.Heartbeat.MissCnt {
 		server.GlobalState.Heartbeat.Status = false
 
-		tg.SendMsg("Heartbeat status: 🛑")
-		log.Info("Heartbeat status: 🛑")
+		c.alert("Heartbeat status", false, false)
 	} else {
 		server.GlobalState.Heartbeat.Status = true
 
-		log.Info("Heartbeat status: 🟢")
+		c.alert("Heartbeat status", true, false)
 	}
 
 	return nil
@@ -83,7 +81,7 @@ func (c *Config) findHeartbeat(ctx context.Context, clientGRPC *grpc.Client, hea
 							return false, err
 						}
 						if heartbeat.Sender.Equals(c.Wallet.Proxy.Acc) && len(heartbeat.KeyIDs) >= 1 {
-							log.Info(fmt.Sprintf("Found and the number of signed: %d", len(heartbeat.KeyIDs)))
+							c.alert(fmt.Sprintf("Found and the number of signed: %d", len(heartbeat.KeyIDs)), true, false)
 							return true, nil
 						}
 					}
