@@ -1,6 +1,10 @@
 package app
 
-import "bharvest.io/axelmon/wallet"
+import (
+	"bharvest.io/axelmon/wallet"
+	"context"
+	"sync"
+)
 
 type Config struct {
 	General struct {
@@ -20,20 +24,34 @@ type Config struct {
 		Validator *wallet.Wallet
 		Proxy     *wallet.Wallet
 	} `toml:"wallet"`
-	Tg struct {
-		Enable bool   `toml:"enable"`
-		Token  string `toml:"token"`
-		ChatID string `toml:"chat_id"`
-	} `toml:"tg"`
+	Alerts struct {
+		Tg struct {
+			Enabled  bool     `toml:"enable"`
+			Token    string   `toml:"token"`
+			ChatID   string   `toml:"chat_id"`
+			Mentions []string `toml:"mentions"`
+		} `toml:"telegram"`
+		Slack struct {
+			Enabled  bool     `toml:"enabled"`
+			Webhook  string   `toml:"webhook"`
+			Mentions []string `toml:"mentions"`
+		} `toml:"slack"`
+	} `toml:"alerts"`
 
 	Heartbeat struct {
 		CheckN  int `toml:"check_n"`
 		MissCnt int `toml:"miss_cnt"`
 	} `toml:"heartbeat"`
 	PollingVote struct {
-		CheckN  int `toml:"check_n"`
-		MissCnt int `toml:"miss_cnt"`
-	} `toml:"evm_vote"`
+		CheckN          int `toml:"check_n"`
+		MissPercentage  int `toml:"miss_percentage"`
+		CheckPeriodDays int `toml:"check_period_days"`
+	} `toml:"external_chain_vote"`
+
+	Ctx       context.Context
+	Cancel    context.CancelFunc
+	alertChan chan *alertMsg
+	alertMux  sync.RWMutex
 }
 
 type TargetSvc string

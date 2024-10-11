@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bharvest.io/axelmon/log"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -8,6 +9,7 @@ import (
 	"github.com/axelarnetwork/axelar-core/x/nexus/exported"
 	"io"
 	"net/http"
+	"time"
 )
 
 type PollingType string
@@ -68,10 +70,10 @@ func (c *Client) GetVerifierSupportedChains(proxyAcc string) ([]exported.ChainNa
 			return result, nil
 		}
 	}
-	return nil, errors.New("didnt' found any verifier matched with your Acc -> " + proxyAcc)
+	return nil, errors.New("didn't found any verifier matched with your Acc -> " + proxyAcc)
 }
 
-func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollingType PollingType) (*VotesReturn, error) {
+func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollingType PollingType, checkPeriod time.Duration) (*VotesReturn, error) {
 	// VotesResponse MissCnt is byte type.
 	// Therefore, the maximum number of evm votes should be
 	// less than 256
@@ -132,12 +134,12 @@ func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollin
 	result := VotesReturn{}
 	result.Chain = chain
 	result.MissCnt = 0
-	if total, ok := res["total"].(float64); ok {
-		result.TotalVotes = total
-	} else {
-		result.TotalVotes = 0
-	}
+	result.TotalVotes = 0
+
 	result.VoteInfos = make([]VoteInfo, len(data))
+
+	var now = time.Now()
+
 	for i, d := range data {
 		if d["initiated_txhash"] != nil {
 			result.VoteInfos[i].InitiatedTXHash = d["initiated_txhash"].(string)
@@ -159,6 +161,12 @@ func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollin
 				return nil, err
 			}
 
+			timestampInSeconds := voteInfo.CreatedAt / 1000
+			if time.Unix(timestampInSeconds, 0).Before(now.Add(-1 * checkPeriod)) {
+				// it's too old record. skip it.
+				log.Debug("skipping... it's too old")
+				continue
+			}
 			result.VoteInfos[i].IsLate = voteInfo.Late
 
 			if voteInfo.Vote {
@@ -176,6 +184,7 @@ func (c *Client) GetPollingVotes(chain string, size int, proxyAcc string, pollin
 		if result.VoteInfos[i].IsLate || result.VoteInfos[i].Vote != 1 {
 			result.MissCnt++
 		}
+		result.TotalVotes++
 	}
 
 	return &result, nil
