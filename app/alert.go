@@ -27,6 +27,8 @@ type alertMsg struct {
 
 	slkHook     string
 	slkMentions string
+
+	resendDuration *time.Duration
 }
 
 type notifyDest uint8
@@ -60,6 +62,10 @@ func shouldNotify(msg *alertMsg, dest notifyDest) bool {
 	switch {
 	case !whichMap[msg.message].IsZero() && !msg.resolved:
 		// already sent this alert
+		if msg.resendDuration != nil && whichMap[msg.message].Add(*msg.resendDuration).Before(time.Now()) {
+			log.Warn("it's not resolved. resending...")
+			break
+		}
 		return false
 	case !whichMap[msg.message].IsZero() && msg.resolved:
 		// alarm is cleared
@@ -182,16 +188,18 @@ func (c *Config) alert(message string, resolved, notSend bool) {
 			}
 		}
 
+		resendDuration := time.Duration(*c.Alerts.ResendDuration)
 		a := &alertMsg{
-			tg:          c.Alerts.Tg.Enabled,
-			slk:         c.Alerts.Slack.Enabled,
-			resolved:    resolved,
-			message:     message,
-			tgChannel:   c.Alerts.Tg.ChatID,
-			tgKey:       c.Alerts.Tg.Token,
-			tgMentions:  strings.Join(c.Alerts.Tg.Mentions, " "),
-			slkHook:     c.Alerts.Slack.Webhook,
-			slkMentions: mentions,
+			tg:             c.Alerts.Tg.Enabled,
+			slk:            c.Alerts.Slack.Enabled,
+			resolved:       resolved,
+			message:        message,
+			tgChannel:      c.Alerts.Tg.ChatID,
+			tgKey:          c.Alerts.Tg.Token,
+			tgMentions:     strings.Join(c.Alerts.Tg.Mentions, " "),
+			slkHook:        c.Alerts.Slack.Webhook,
+			slkMentions:    mentions,
+			resendDuration: &resendDuration,
 		}
 		c.alertChan <- a
 		c.alertMux.RUnlock()

@@ -4,13 +4,25 @@ import (
 	"bharvest.io/axelmon/wallet"
 	"context"
 	"sync"
+	"time"
 )
+
+type Duration time.Duration
+
+func (d *Duration) UnmarshalText(b []byte) error {
+	x, err := time.ParseDuration(string(b))
+	if err != nil {
+		return err
+	}
+	*d = Duration(x)
+	return nil
+}
 
 type Config struct {
 	General struct {
-		Network              string `toml:"network"`
-		Period               uint   `toml:"period"`
-		ExceptChainsString   string `toml:"except_chains"`
+		Network              string    `toml:"network"`
+		Period               *Duration `toml:"period"`
+		ExceptChainsString   string    `toml:"except_chains"`
 		ExceptChains         map[string]bool
 		ValidatorAcc         string      `toml:"validator_acc"`
 		RPC                  string      `toml:"rpc"`
@@ -25,7 +37,8 @@ type Config struct {
 		Proxy     *wallet.Wallet
 	} `toml:"wallet"`
 	Alerts struct {
-		Tg struct {
+		ResendDuration *Duration `toml:"resend_duration"`
+		Tg             struct {
 			Enabled  bool     `toml:"enable"`
 			Token    string   `toml:"token"`
 			ChatID   string   `toml:"chat_id"`
