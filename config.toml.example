@@ -1,9 +1,23 @@
 [general]
 # mainnet || testnet
+# it determine what axelarscan api used to. if the network you would monitor is not mainnet/testnet, you could set this value as you want.
+#
+# mainnet: "https://api.axelarscan.io:443"
+# testnet: "https://testnet.api.axelarscan.io:443"
+#
+# others(like devnet): "<what you entered. if you set network as "https://devnet-verifiers.api.axelarscan.io:443", it'll be used as api server>"
+#
 network = "mainnet"
 
 # Program execution period (minutes)
+# it runs to monitor axelar and sleeps for a while you entered period.
 period = 60
+
+# In axelar, there is associated account with validator that called as proxy account. and this proxy account is used for externalChainVotes.
+#
+# but if you set this field with non-validator account, and cannot find any proxy account, it'll just use entered account.
+# reason why the program uses it's own account when cannot fetch proxy account is just for amplifier(verifier).
+# amplifier doesn't uses any proxy account. therefore, to monitor amplifier's work, it'll use just entered account.
 
 validator_acc = "axelar123..."
 
@@ -20,10 +34,17 @@ grpc_secure_connection = true
 
 listen_port = 8080
 
-[tg]
+[alerts]
+[alerts.telegram]
 enable = true
 token = "..."
 chat_id = "..."
+mentions = ["", ""]
+
+[alerts.slack]
+enable = true
+webhook = "..."
+mentions = ["", ""]
 
 [heartbeat]
 # The number of heartbeats you want to check.
@@ -32,9 +53,15 @@ check_n = 3
 # If a heartbeat is missed for more than miss_cnt, an alarm will triggered.
 miss_cnt = 	2
 
-[evm_vote]
+[external_chain_vote]
 # The number of votes for each external chain events you want to check.
 check_n = 10
 
-# If a votes is missed for more than miss_cnt, an alarm will triggered.
-miss_cnt = 5
+# this field restrict monitor target period. some chains connected on mainnet/testnet may have low traffic.
+# and if there is no many votes and remaining too old vote record, monitoring programs' alert may be less trusted.
+#
+# `check_period_days` will truncate old records.
+check_period_days = 10
+
+# If a `missedVotes / totalVotes` is over `miss_percentage` parameter, it'll alert.
+miss_percentage = 20
