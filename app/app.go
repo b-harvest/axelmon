@@ -1,7 +1,12 @@
 package app
 
 import (
+	"bharvest.io/axelmon/server"
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -13,6 +18,29 @@ type Monfunc func(ctx context.Context) error
 func Run(ctx context.Context, c *Config) {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 	defer cancel()
+
+	c.alertChan = make(chan *alertMsg)
+
+	go func() {
+		for {
+			select {
+			case alert := <-c.alertChan:
+				go func(msg *alertMsg) {
+					var e error
+					e = notifyTg(msg)
+					if e != nil {
+						log.Error(errors.New(fmt.Sprintf("error sending alert to telegram %v", e)))
+					}
+					e = notifySlack(msg)
+					if e != nil {
+						log.Error(errors.New(fmt.Sprintf("error sending alert to slack %v", e)))
+					}
+				}(alert)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 
 	var monitoringFuncs []Monfunc
 
@@ -55,4 +83,37 @@ func Run(ctx context.Context, c *Config) {
 	wg.Wait()
 
 	return
+}
+
+func SaveOnExit(stateFile string) {
+
+	saveState := func() {
+		log.Info("saving state...")
+		//#nosec -- variable specified on command line
+		f, e := os.OpenFile(stateFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+		if e != nil {
+			log.Error(e)
+			return
+		}
+
+		b, e := json.Marshal(&server.GlobalState)
+		if e != nil {
+			log.Error(e)
+			return
+		}
+		_, _ = f.Write(b)
+		_ = f.Close()
+		log.Info("Axelmon exiting.")
+	}
+	saveState()
+	//for {
+	//	select {
+	//	case <-ctx.Done():
+	//		saveState()
+	//		return
+	//	case <-quitting:
+	//		saveState()
+	//		return
+	//	}
+	//}
 }
