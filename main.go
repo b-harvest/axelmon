@@ -25,13 +25,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	cfgPath := flag.String("config", "", "Config file")
+	stateFilePath := flag.String("state", ".axelmon-state.json", "state file")
 	flag.Parse()
+
 	if *cfgPath == "" {
 		panic("Error: Please input config file path with -config flag.")
 	}
-
-	stateFilePath := flag.String("state", ".axelmon-state.json", "state file")
-	flag.Parse()
 
 	f, err := os.ReadFile(*cfgPath)
 	if err != nil {
