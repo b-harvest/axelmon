@@ -3,16 +3,32 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"bharvest.io/axelmon/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var GlobalState Response
+var GlobalState *Response
+
+const STATE_FILE_PATH = ".axelmon-state.json"
 
 func Run(listenPort int) {
-	GlobalState = Response{}
+	sf, e := os.OpenFile(STATE_FILE_PATH, os.O_RDONLY, 0600)
+	if e != nil {
+		log.Warn(e.Error())
+	}
+	b, e := io.ReadAll(sf)
+	_ = sf.Close()
+	if e != nil {
+		log.Warn(e.Error())
+	}
+	saved := &Response{}
+	e = json.Unmarshal(b, saved)
+
+	GlobalState = saved
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
