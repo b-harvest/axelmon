@@ -1,3 +1,5 @@
 .DS_Store
 
 *.toml
+.idea/
+.axelmon-state.json

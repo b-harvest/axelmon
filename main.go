@@ -1,27 +1,28 @@
 package main
 
 import (
-	"context"
-	"flag"
-	"fmt"
-	"os"
-	"runtime"
-	"strings"
-	"time"
-
 	"bharvest.io/axelmon/app"
 	"bharvest.io/axelmon/client/api"
 	"bharvest.io/axelmon/log"
 	"bharvest.io/axelmon/server"
-	"bharvest.io/axelmon/tg"
 	"bharvest.io/axelmon/wallet"
+	"context"
+	"errors"
+	"flag"
+	"fmt"
 	"github.com/pelletier/go-toml/v2"
+	"os"
+	"os/signal"
+	"runtime"
+	"strings"
+	"syscall"
+	"time"
 )
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 
 	cfgPath := flag.String("config", "", "Config file")
 	flag.Parse()
@@ -39,6 +40,12 @@ func main() {
 	if err != nil {
 		log.Error(err)
 		panic(err)
+	}
+
+	if cfg.PollingVote.MissPercentage < 0 || cfg.PollingVote.MissPercentage > 100 {
+		panic(errors.New("MissPercentage must be between 0 to 100"))
+	} else if cfg.PollingVote.MissPercentage == 0 {
+		log.Debug("MissPercentage seems like zero. it'll alert if there is any failed record")
 	}
 
 	cfg.Wallet.Validator, err = wallet.NewWallet(ctx, cfg.General.ValidatorAcc)
@@ -62,7 +69,7 @@ func main() {
 			panic(err)
 		}
 	} else {
-		log.Warn("Cannot fetch proxy acc. it may occur errors while retrieving voting infos.")
+		log.Warn("Cannot fetch proxy acc. it may cause error while retrieving voting infos.")
 		cfg.Wallet.Proxy = cfg.Wallet.Validator
 		if err != nil {
 			log.Error(err)
@@ -70,18 +77,34 @@ func main() {
 		}
 	}
 
-	tgTitle := fmt.Sprintf("🤖 Axelmon for %s 🤖", cfg.General.Network)
-	tg.SetTg(cfg.Tg.Enable, tgTitle, cfg.Tg.Token, cfg.Tg.ChatID)
-
 	cfg.General.ExceptChains = map[string]bool{}
 	exceptChains := strings.Split(strings.ReplaceAll(cfg.General.ExceptChainsString, " ", ""), ",")
 	for _, exceptChain := range exceptChains {
 		cfg.General.ExceptChains[strings.ToLower(exceptChain)] = true
 	}
 
+	cfg.Ctx = ctx
+
 	go server.Run(cfg.General.ListenPort)
+
+	quitting := make(chan os.Signal, 1)
+	signal.Notify(quitting, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+
+	ticker := time.NewTicker(time.Duration(cfg.General.Period) * time.Minute)
+	go app.Run(ctx, &cfg)
+
 	for {
-		app.Run(ctx, &cfg)
-		time.Sleep(time.Duration(cfg.General.Period) * time.Minute)
+		select {
+		case <-ctx.Done():
+			app.SaveOnExit(server.STATE_FILE_PATH)
+			return
+		case <-quitting:
+			cancel()
+			app.SaveOnExit(server.STATE_FILE_PATH)
+			return
+		case <-ticker.C:
+			go app.Run(ctx, &cfg)
+		}
 	}
+
 }

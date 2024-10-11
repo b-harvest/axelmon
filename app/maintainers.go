@@ -9,7 +9,6 @@ import (
 	"bharvest.io/axelmon/log"
 	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
-	"bharvest.io/axelmon/tg"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -42,6 +41,7 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 		for _, acc := range maintainers {
 			if acc.Equals(c.Wallet.Validator.Cons) {
 				result[chain.String()] = true
+				break
 			}
 		}
 
@@ -64,10 +64,6 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 		msg += fmt.Sprintf("(%s: %v) ", k, v)
 		if v == false {
 			check = false
-
-			m := fmt.Sprintf("Maintainer status(%s): 🛑", k)
-			log.Info(m)
-			tg.SendMsg(m)
 		}
 	}
 	log.Info(msg)
@@ -76,11 +72,13 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 	if check {
 		server.GlobalState.Maintainers.Status = true
 
+		c.alert(msg, true, false)
+
 		log.Info("Maintainer status: 🟢")
 	} else {
 		server.GlobalState.Maintainers.Status = false
 
-		log.Info("Maintainer status: 🛑")
+		c.alert(msg, false, false)
 	}
 
 	return nil
