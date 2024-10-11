@@ -1,5 +1,10 @@
 package server
 
+import (
+	"sync"
+	"time"
+)
+
 type VotesInfo struct {
 	Status bool   `json:"status"`
 	Missed string `json:"missed"`
@@ -18,5 +23,12 @@ type Response struct {
 
 	EVMVotes struct {
 		Chain map[string]VotesInfo `json:"chain"`
-	} `json:"EVMVotes"`
+	} `json:"externalChainVotes"`
+
+	Alerts struct {
+		SentTgAlarms  map[string]time.Time `json:"sent_tg_alarms"`
+		SentSlkAlarms map[string]time.Time `json:"sent_slk_alarms"`
+		AllAlarms     map[string]time.Time `json:"sent_all_alarms"`
+		NotifyMux     sync.RWMutex
+	} `json:"alerts"`
 }
