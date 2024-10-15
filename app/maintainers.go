@@ -59,26 +59,30 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 	}
 
 	check := true
-	msg := "Maintainers status: "
+	prefix := "Maintainers status: "
+	msg := prefix
+	var alerts []string
 	for k, v := range result {
 		msg += fmt.Sprintf("(%s: %v) ", k, v)
 		if v == false {
 			check = false
+			alerts = append(alerts, k)
 		}
 	}
-	log.Info(msg)
+	log.Debug(msg)
 
 	server.GlobalState.Maintainers.Maintainer = result
 	if check {
 		server.GlobalState.Maintainers.Status = true
 
-		c.alert(msg, true, false)
+		c.alert(prefix, alerts, true, false)
 
-		log.Info("Maintainer status: 🟢")
+		log.Info(msg)
 	} else {
 		server.GlobalState.Maintainers.Status = false
 
-		c.alert(msg, false, false)
+		c.alert(prefix, alerts, false, false)
+		log.Info(msg)
 	}
 
 	return nil

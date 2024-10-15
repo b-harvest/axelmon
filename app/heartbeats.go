@@ -47,11 +47,11 @@ func (c *Config) checkHeartbeats(ctx context.Context) error {
 	if missCnt >= c.Heartbeat.MissCnt {
 		server.GlobalState.Heartbeat.Status = false
 
-		c.alert("Heartbeat status", false, false)
+		c.alert("Heartbeat status", []string{fmt.Sprintf("%d/%d", missCnt, c.Heartbeat.CheckN)}, false, false)
 	} else {
 		server.GlobalState.Heartbeat.Status = true
 
-		c.alert("Heartbeat status", true, false)
+		c.alert("Heartbeat status", []string{fmt.Sprintf("%d/%d", missCnt, c.Heartbeat.CheckN)}, true, false)
 	}
 
 	return nil
@@ -81,7 +81,7 @@ func (c *Config) findHeartbeat(ctx context.Context, clientGRPC *grpc.Client, hea
 							return false, err
 						}
 						if heartbeat.Sender.Equals(c.Wallet.Proxy.Acc) && len(heartbeat.KeyIDs) >= 1 {
-							c.alert(fmt.Sprintf("Found and the number of signed: %d", len(heartbeat.KeyIDs)), true, false)
+							c.alert(fmt.Sprintf("Found and the number of signed: %d", len(heartbeat.KeyIDs)), []string{}, true, false)
 							return true, nil
 						}
 					}

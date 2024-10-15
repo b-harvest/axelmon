@@ -72,12 +72,12 @@ func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingT
 			votesInfo.Status = false
 
 			msg := fmt.Sprintf("%s status(%s)", pollingType, chain)
-			c.alert(msg, false, false)
+			c.alert(msg, []string{}, false, false)
 		} else {
 			votesInfo.Status = true
 
 			msg := fmt.Sprintf("%s status(%s)", pollingType, chain)
-			c.alert(msg, true, false)
+			c.alert(msg, []string{}, true, false)
 		}
 
 		result[chain.String()] = votesInfo

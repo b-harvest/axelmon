@@ -19,6 +19,7 @@ type alertMsg struct {
 
 	resolved bool
 	message  string
+	args     []string
 	uniqueId string
 
 	tgChannel  string
@@ -134,7 +135,7 @@ func buildSlackMessage(msg *alertMsg) *SlackMessage {
 		color = "good"
 	}
 	return &SlackMessage{
-		Text: msg.message,
+		Text: fmt.Sprintf("%s\n%v", msg.message, msg.args),
 		Attachments: []Attachment{
 			{
 				Title: fmt.Sprintf("🤖 Axelmon %s %s", prefix, msg.slkMentions),
@@ -162,7 +163,7 @@ func notifyTg(msg *alertMsg) (err error) {
 		return
 	}
 
-	mc := tgbotapi.NewMessageToChannel(msg.tgChannel, fmt.Sprintf("%s - %s %s\n%s", "🤖 Axelmon", prefix, msg.message, msg.tgMentions))
+	mc := tgbotapi.NewMessageToChannel(msg.tgChannel, fmt.Sprintf("%s - %s %s\n%s", "🤖 Axelmon", prefix, fmt.Sprintf("%s\n%v", msg.message, msg.args), msg.tgMentions))
 	_, err = bot.Send(mc)
 	if err != nil {
 		log.Error(errors.New(fmt.Sprintf("telegram send: %v", err)))
@@ -170,7 +171,7 @@ func notifyTg(msg *alertMsg) (err error) {
 	return err
 }
 
-func (c *Config) alert(message string, resolved, notSend bool) {
+func (c *Config) alert(message string, args []string, resolved, notSend bool) {
 	prefix := "🛑 "
 	if resolved {
 		prefix = "🟢 Healthy "
@@ -207,6 +208,7 @@ func (c *Config) alert(message string, resolved, notSend bool) {
 			slk:            c.Alerts.Slack.Enabled,
 			resolved:       resolved,
 			message:        message,
+			args:           args,
 			tgChannel:      c.Alerts.Tg.ChatID,
 			tgKey:          c.Alerts.Tg.Token,
 			tgMentions:     strings.Join(c.Alerts.Tg.Mentions, " "),
