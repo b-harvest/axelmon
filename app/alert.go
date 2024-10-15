@@ -134,8 +134,13 @@ func buildSlackMessage(msg *alertMsg) *SlackMessage {
 		prefix = "🟢 Healthy: "
 		color = "good"
 	}
+
+	text := msg.message
+	if len(msg.args) > 0 {
+		text = fmt.Sprintf("%s\n%v", msg.message, msg.args)
+	}
 	return &SlackMessage{
-		Text: fmt.Sprintf("%s\n%v", msg.message, msg.args),
+		Text: text,
 		Attachments: []Attachment{
 			{
 				Title: fmt.Sprintf("🤖 Axelmon %s %s", prefix, msg.slkMentions),
@@ -163,7 +168,11 @@ func notifyTg(msg *alertMsg) (err error) {
 		return
 	}
 
-	mc := tgbotapi.NewMessageToChannel(msg.tgChannel, fmt.Sprintf("%s - %s %s\n%s", "🤖 Axelmon", prefix, fmt.Sprintf("%s\n%v", msg.message, msg.args), msg.tgMentions))
+	text := msg.message
+	if len(msg.args) > 0 {
+		text = fmt.Sprintf("%s\n%v", msg.message, msg.args)
+	}
+	mc := tgbotapi.NewMessageToChannel(msg.tgChannel, fmt.Sprintf("%s - %s %s\n%s", "🤖 Axelmon", prefix, text, msg.tgMentions))
 	_, err = bot.Send(mc)
 	if err != nil {
 		log.Error(errors.New(fmt.Sprintf("telegram send: %v", err)))
