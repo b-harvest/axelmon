@@ -1,6 +1,9 @@
 # Axelmon
 
-`Axelmon` is a monitoring tool designed specifically for validators on the Axelar network. With `Axelmon`, validators can effortlessly verify the health and performance of both `vald` and `tofnd` nodes. Additionally, this tool promptly alerts operators in case any issues arise with these nodes.
+`Axelmon` is a monitoring tool designed specifically for validators on the Axelar network. 
+With `Axelmon`, validators can effortlessly verify the health and performance of both `vald` and `tofnd` nodes.
+If you are operating `amplifier`, you could monitor ampd also through specifying `target_svcs` as `["vm"]`. 
+Additionally, this tool promptly alerts operators in case any issues arise with these nodes.
 
 ### Contents
 
@@ -20,6 +23,8 @@
   - Monitors the registration status of maintainers on the Axelar network.
 - EVM Vote
   - Monitors votes for registered external chains(Maintainers).
+- VM Vote
+  - Monitors votes for amplifier.
 
 ## Features
 
@@ -27,8 +32,27 @@
   - Access monitoring results via a JSON API, available at the following path: `/`.
 - Prometheus
   - Also support Prometheus for providing monitoring results. You can access them at the following path: `/metrics`.
-- Telegram Alerts
-  - Receive alerts via Telegram if any issues arise with your node.
+- Alerts
+  - You could alert to operator with supported Alerts options.
+
+### Supported Alerts
+You could receive alerts via followings if any issues arise with your node.
+
+```toml
+[alerts]
+resend_duration = "24h"
+[alerts.telegram]
+enable = true
+token = "xxxxxxxx:xxxxxxxxxxxxxxxx"
+chat_id = "xxxxxxxxxx"
+mentions = ["@<userId(eg. @hello)>"]
+
+[alerts.slack]
+enable = true
+webhook = "<webHook-url>"
+mentions = ["<userId(eg. U05QL6EDDQE)>"]
+
+```
 
 ## Quick Guide
 
@@ -49,6 +73,94 @@ cp config.toml.example config.toml
 ```bash
 ./axelmon -config config.toml
 ```
+
+## config.toml
+```toml
+[general]
+# mainnet || testnet
+# it determine what axelarscan api used to. if the network you would monitor is not mainnet/testnet, you could set this value as you want.
+#
+# mainnet: "https://api.axelarscan.io:443"
+# testnet: "https://testnet.api.axelarscan.io:443"
+#
+# others(like devnet): "<if you set network as "https://devnet-verifiers.api.axelarscan.io:443", it'll be used as api server>"
+#
+network = "mainnet"
+
+# Program execution period (minutes)
+# it runs to monitor axelar and sleeps for a while you entered period.
+period = 60
+
+# In axelar, there is associated account with validator that called as proxy account(it's on your tofnd). and this proxy account is used for externalChainVotes.
+# + you should set this field as accAddress, not valAddress(valops)
+#
+# but if you set this field with non-validator account, and cannot find any proxy account, it'll just use entered account.
+# reason why the program uses account which is not proxy when cannot fetch proxy account is for amplifier(verifier).
+# because amplifier doesn't use any proxy account, just uses its own account.
+
+validator_acc = "axelar123..."
+
+# Chains you don't want to monitor.
+# If empty, all external votes will be monitored.
+# e.g. "aurora, ethereum"
+except_chains = ""
+
+rpc = "https://axelar-rpc...:443"
+api = "https://axelar-api...:443"
+
+grpc = "axelar-grpc...:443"
+grpc_secure_connection = true
+
+listen_port = 8080
+
+target_svcs = ["maintainer", "heartbeat", "evm"]
+
+[alerts]
+# when program detects over-threshold situation, it'll call alert func, and if there is already exists with same message before, alert func will be completed.
+# this feature is designed to prevent too many alerts with same sitatuion (or already proceed solving action but not applied to network).
+# 
+# but if program alerts, and operator forget it, node will be keep unhealthy state.
+# 
+# to prevent this accident, program will send alerts if there is no alert record, 
+# or alert record which already exists is over than `resend_duration`.  
+resend_duration = "24h"
+
+[alerts.telegram]
+enable = true
+token = "xxxxxxxx:xxxxxxxxxxxxxxxx"
+chat_id = "xxxxxxxxxx"
+mentions = ["@<userId(eg. @hello)>"]
+
+[alerts.slack]
+enable = true
+webhook = "<webHook-url>"
+mentions = ["<userId(eg. U05QL6EDDQE)>"]
+
+
+[heartbeat]
+# The number of heartbeats you want to check.
+check_n = 3
+
+# If a heartbeat is missed for more than miss_cnt, an alarm will triggered.
+miss_cnt = 	2
+
+[external_chain_vote] # external_chain_vote configurations are used to check evm/vm polls.
+
+# The number of votes for each external chain events you want to check.
+check_n = 10
+
+# this field restrict monitor target period. some chains connected on mainnet/testnet may have low txs.
+# and if votes contain too old vote records when I fetch votes with number of `check_n`, and also invalid vote txs are exists before, monitoring alert may be less trusted.
+#
+# `check_period_days` will truncate old records.
+check_period_days = 10
+
+# If a `missedVotes / totalVotes` is over `miss_percentage` parameter, it'll alert.
+miss_percentage = 20
+
+```
+
+
 
 # Deep dive
 

@@ -5,7 +5,7 @@
 # mainnet: "https://api.axelarscan.io:443"
 # testnet: "https://testnet.api.axelarscan.io:443"
 #
-# others(like devnet): "<what you entered. if you set network as "https://devnet-verifiers.api.axelarscan.io:443", it'll be used as api server>"
+# others(like devnet): "<if you set network as "https://devnet-verifiers.api.axelarscan.io:443", it'll be used as api server>"
 #
 network = "mainnet"
 
@@ -13,16 +13,17 @@ network = "mainnet"
 # it runs to monitor axelar and sleeps for a while you entered period.
 period = 60
 
-# In axelar, there is associated account with validator that called as proxy account. and this proxy account is used for externalChainVotes.
+# In axelar, there is associated account with validator that called as proxy account(it's on your tofnd). and this proxy account is used for externalChainVotes.
+# + you should set this field as accAddress, not valAddress(valops)
 #
 # but if you set this field with non-validator account, and cannot find any proxy account, it'll just use entered account.
-# reason why the program uses it's own account when cannot fetch proxy account is just for amplifier(verifier).
-# amplifier doesn't uses any proxy account. therefore, to monitor amplifier's work, it'll use just entered account.
+# reason why the program uses account which is not proxy when cannot fetch proxy account is for amplifier(verifier).
+# because amplifier doesn't use any proxy account, just uses its own account.
 
 validator_acc = "axelar123..."
 
 # Chains you don't want to monitor.
-# If empty, all evm votes will be monitored.
+# If empty, all external votes will be monitored.
 # e.g. "aurora, ethereum"
 except_chains = ""
 
@@ -34,17 +35,29 @@ grpc_secure_connection = true
 
 listen_port = 8080
 
+target_svcs = ["maintainer", "heartbeat", "evm"]
+
 [alerts]
+# when program detects over-threshold situation, it'll call alert func, and if there is already exists with same message before, alert func will be completed.
+# this feature is designed to prevent too many alerts with same sitatuion (or already proceed solving action but not applied to network).
+#
+# but if program alerts, and operator forget it, node will be keep unhealthy state.
+#
+# to prevent this accident, program will send alerts if there is no alert record,
+# or alert record which already exists is over than `resend_duration`.
+resend_duration = "24h"
+
 [alerts.telegram]
 enable = true
-token = "..."
-chat_id = "..."
-mentions = ["", ""]
+token = "xxxxxxxx:xxxxxxxxxxxxxxxx"
+chat_id = "xxxxxxxxxx"
+mentions = ["@<userId(eg. @hello)>"]
 
 [alerts.slack]
 enable = true
-webhook = "..."
-mentions = ["", ""]
+webhook = "<webHook-url>"
+mentions = ["<userId(eg. U05QL6EDDQE)>"]
+
 
 [heartbeat]
 # The number of heartbeats you want to check.
@@ -53,12 +66,13 @@ check_n = 3
 # If a heartbeat is missed for more than miss_cnt, an alarm will triggered.
 miss_cnt = 	2
 
-[external_chain_vote]
+[external_chain_vote] # external_chain_vote configurations are used to check evm/vm polls.
+
 # The number of votes for each external chain events you want to check.
 check_n = 10
 
-# this field restrict monitor target period. some chains connected on mainnet/testnet may have low traffic.
-# and if there is no many votes and remaining too old vote record, monitoring programs' alert may be less trusted.
+# this field restrict monitor target period. some chains connected on mainnet/testnet may have low txs.
+# and if votes contain too old vote records when I fetch votes with number of `check_n`, and also invalid vote txs are exists before, monitoring alert may be less trusted.
 #
 # `check_period_days` will truncate old records.
 check_period_days = 10
