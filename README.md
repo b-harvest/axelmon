@@ -72,6 +72,8 @@ cp config.toml.example config.toml
 
 ```bash
 ./axelmon -config config.toml
+# if you want to use other state, use flag `state`
+# axelmon -config config.toml -axelmon .axelmon-mainnet-state.json
 ```
 
 ## config.toml
@@ -103,6 +105,8 @@ validator_acc = "axelar123..."
 # Chains you don't want to monitor.
 # If empty, all external votes will be monitored.
 # e.g. "aurora, ethereum"
+#
+# If you're monitoring amplifier, you don't have to set this field because when check vmPolls, program  
 except_chains = ""
 
 rpc = "https://axelar-rpc...:443"
@@ -113,6 +117,8 @@ grpc_secure_connection = true
 
 listen_port = 8080
 
+# If you want to monitor amplifier, you should set this field as ["vm"], and also set validator_acc as your amplifier's acc address.
+# 
 target_svcs = ["maintainer", "heartbeat", "evm"]
 
 [alerts]
@@ -122,7 +128,9 @@ target_svcs = ["maintainer", "heartbeat", "evm"]
 # but if program alerts, and operator forget it, node will be keep unhealthy state.
 # 
 # to prevent this accident, program will send alerts if there is no alert record, 
-# or alert record which already exists is over than `resend_duration`.  
+# or alert record which already exists is over than `resend_duration`.
+# 
+# if not set, it'll set as 24h.
 resend_duration = "24h"
 
 [alerts.telegram]
