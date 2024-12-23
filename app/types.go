@@ -1,10 +1,11 @@
 package app
 
 import (
-	"bharvest.io/axelmon/wallet"
 	"context"
 	"sync"
 	"time"
+
+	"bharvest.io/axelmon/wallet"
 )
 
 type Duration time.Duration
@@ -60,6 +61,11 @@ type Config struct {
 		MissPercentage  int `toml:"miss_percentage"`
 		CheckPeriodDays int `toml:"check_period_days"`
 	} `toml:"external_chain_vote"`
+	PollingSigning struct {
+		CheckN          int `toml:"check_n"`
+		MissPercentage  int `toml:"miss_percentage"`
+		CheckPeriodDays int `toml:"check_period_days"`
+	} `toml:"external_chain_signing"`
 
 	Ctx       context.Context
 	Cancel    context.CancelFunc
@@ -74,4 +80,5 @@ const (
 	HeartbeatTargetSvc  TargetSvc = "heartbeat"
 	EVMVoteTargetSvc    TargetSvc = "evm"
 	VMVoteTargetSvc     TargetSvc = "vm"
+	VMSigningTargetSvc  TargetSvc = "vmSigning"
 )

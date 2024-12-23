@@ -25,6 +25,10 @@ type Response struct {
 		Chain map[string]VotesInfo `json:"chain"`
 	} `json:"externalChainVotes"`
 
+	VMSignings struct {
+		Chain map[string]VotesInfo `json:"chain"`
+	} `json:"externalChainSignings"`
+
 	Alerts struct {
 		SentTgAlarms  map[string]time.Time `json:"sent_tg_alarms"`
 		SentSlkAlarms map[string]time.Time `json:"sent_slk_alarms"`

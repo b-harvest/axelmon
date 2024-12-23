@@ -79,3 +79,17 @@ check_period_days = 10
 
 # If a `missedVotes / totalVotes` is over `miss_percentage` parameter, it'll alert.
 miss_percentage = 20
+
+[external_chain_signing] # external_chain_siging configurations are used to check vm signings.
+
+# The number of signing for each external chain events you want to check.
+check_n = 10
+
+# this field restrict monitor target period. some chains connected on mainnet/testnet may have low txs.
+# and if signing contain too old signing records when I fetch sigings with number of `check_n`, and also invalid signing txs are exists before, monitoring alert may be less trusted.
+#
+# `check_period_days` will truncate old records.
+check_period_days = 10
+
+# If a `missedSignings / totalSignings` is over `miss_percentage` parameter, it'll alert.
+miss_percentage = 20

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bharvest.io/axelmon/server"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"bharvest.io/axelmon/server"
 
 	"bharvest.io/axelmon/log"
 )
@@ -45,7 +46,7 @@ func Run(ctx context.Context, c *Config) {
 	var monitoringFuncs []Monfunc
 
 	if len(c.General.TargetSvcs) == 0 {
-		monitoringFuncs = []Monfunc{c.checkMaintainers, c.checkHeartbeats, c.checkEVMVotes}
+		monitoringFuncs = []Monfunc{c.checkMaintainers, c.checkHeartbeats, c.checkEVMVotes, c.checkVMSignings}
 	} else {
 		for _, targetSvc := range c.General.TargetSvcs {
 			switch targetSvc {
@@ -60,6 +61,9 @@ func Run(ctx context.Context, c *Config) {
 				break
 			case VMVoteTargetSvc:
 				monitoringFuncs = append(monitoringFuncs, c.checkVMVotes)
+				break
+			case VMSigningTargetSvc:
+				monitoringFuncs = append(monitoringFuncs, c.checkVMSignings)
 				break
 			}
 		}
