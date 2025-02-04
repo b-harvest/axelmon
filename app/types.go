@@ -54,6 +54,7 @@ type Config struct {
 	Heartbeat struct {
 		CheckN  int `toml:"check_n"`
 		MissCnt int `toml:"miss_cnt"`
+		TryCnt  int `toml:"try_cnt"`
 	} `toml:"heartbeat"`
 	PollingVote struct {
 		CheckN          int `toml:"check_n"`

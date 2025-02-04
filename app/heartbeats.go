@@ -30,7 +30,7 @@ func (c *Config) checkHeartbeats(ctx context.Context) error {
 	missCnt := 0
 	log.Info(fmt.Sprintf("Broadcaster: %s", c.Wallet.Proxy.PrintAcc()))
 	for i := 0; i < c.Heartbeat.CheckN; i++ {
-		isFound, err := c.findHeartbeat(ctx, clientGRPC, heartbeatHeight, 2)
+		isFound, err := c.findHeartbeat(ctx, clientGRPC, heartbeatHeight, c.Heartbeat.TryCnt)
 		if err != nil {
 			log.Debug(err)
 		}
