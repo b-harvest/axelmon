@@ -80,8 +80,8 @@ func (c *Config) findHeartbeat(ctx context.Context, clientGRPC *grpc.Client, hea
 						if err != nil {
 							return false, err
 						}
-						if heartbeat.Sender.Equals(c.Wallet.Proxy.Acc) && len(heartbeat.KeyIDs) >= 1 {
-							c.alert(fmt.Sprintf("Found and the number of signed: %d", len(heartbeat.KeyIDs)), []string{}, true, false)
+						if heartbeat.Sender.Equals(c.Wallet.Proxy.Acc) {
+							c.alert(fmt.Sprintf("Found heartbeat of the broadcaster"), []string{}, true, false)
 							return true, nil
 						}
 					}
