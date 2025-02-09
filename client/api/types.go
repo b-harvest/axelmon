@@ -41,6 +41,38 @@ type (
 	}
 )
 
+type (
+	SigningsRequest struct {
+		Chain  string `json:"chain"`
+		Size   int    `json:"size"`
+	}
+
+	Signing struct {
+		CreatedAt int64  `json:"created_at"`
+		ID        string `json:"id"`
+		Signer     string `json:"signer"`
+		Type      string `json:"type"`
+		Sign      bool   `json:"sign"`
+		Height    int    `json:"height"`
+	}
+
+	SigningsReturn struct {
+		Chain      string
+		MissCnt    int
+		SigningInfos  []SigningInfo
+		TotalSignings float64
+	}
+	SigningInfo struct {
+		InitiatedTXHash string
+		SessionID       float64
+		
+		// 0 => not signed
+		// 1 => yes
+		// 2 => no
+		Sign byte
+	}
+)
+
 type Proxy struct {
 	Height string `json:"height"`
 	Result struct {

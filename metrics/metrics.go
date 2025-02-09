@@ -6,6 +6,14 @@ import (
 )
 
 var (
+	VMSigningsCounter = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "vm_signings_total",
+			Help: "Number of VM signings",
+		},
+		[]string{"network_name", "status"},
+	)
+	
 	EVMVotesCounter = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "evm_votes_total",
