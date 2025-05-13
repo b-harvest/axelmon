@@ -4,6 +4,7 @@ import (
 	"bharvest.io/axelmon/app"
 	"bharvest.io/axelmon/client/api"
 	"bharvest.io/axelmon/log"
+	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
 	"bharvest.io/axelmon/wallet"
 	"context"
@@ -86,6 +87,8 @@ func main() {
 	}
 
 	cfg.Ctx = ctx
+
+	metrics.Initialize(cfg.General.Network, cfg.Wallet.Proxy.Acc.String())
 
 	go server.Run(cfg.General.ListenPort, *stateFilePath)
 

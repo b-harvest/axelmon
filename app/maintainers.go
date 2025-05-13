@@ -9,7 +9,6 @@ import (
 	"bharvest.io/axelmon/log"
 	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func (c *Config) checkMaintainers(ctx context.Context) error {
@@ -55,7 +54,7 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 		} else {
 			maintainerInNetwork = 0
 		}
-		metrics.MaintainersGauge.With(prometheus.Labels{"network_name": chain.String()}).Set(float64(maintainerInNetwork))
+		metrics.SetMaintainersStatus(chain.String(), maintainerInNetwork)
 	}
 
 	check := true

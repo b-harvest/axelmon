@@ -11,7 +11,6 @@ import (
 	"bharvest.io/axelmon/client/grpc"
 	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func (c *Config) checkEVMVotes(ctx context.Context) error {
@@ -60,13 +59,8 @@ func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingT
 		}
 
 		votesInfo.Missed = fmt.Sprintf("%d / %d", resp.MissCnt, int(resp.TotalVotes))
-		metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "missed"}).Add(float64(resp.MissCnt))
-		// check if the total number of votes is higher than the number of votes checked
-		if resp.TotalVotes < float64(c.PollingVote.CheckN) {
-			metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "success"}).Add(float64(int(resp.TotalVotes) - resp.MissCnt))
-		} else {
-			metrics.EVMVotesCounter.With(prometheus.Labels{"network_name": chain.String(), "status": "success"}).Add(resp.TotalVotes - float64(resp.MissCnt))
-		}
+		metrics.SetEVMVotesMissed(chain.String(), resp.MissCnt)
+		metrics.SetEVMVotesSuccess(chain.String(), int(resp.TotalVotes)-resp.MissCnt)
 
 		if (float64(resp.MissCnt)/resp.TotalVotes)*100 > float64(c.PollingVote.MissPercentage) {
 			votesInfo.Status = false
