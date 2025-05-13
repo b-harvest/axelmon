@@ -34,9 +34,9 @@ var (
 	address string
 )
 
-func Initialize(chain, address string) {
-	chain = chain
-	address = address
+func Initialize(c, a string) {
+	chain = c
+	address = a
 }
 
 func SetEVMVotesMissed(targetNetwork string, missCnt int) {
