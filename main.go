@@ -88,7 +88,7 @@ func main() {
 
 	cfg.Ctx = ctx
 
-	metrics.Initialize(cfg.General.Network, cfg.Wallet.Proxy.Acc.String())
+	metrics.Initialize(cfg.General.Network, cfg.Wallet.Proxy.PrintAcc())
 
 	go server.Run(cfg.General.ListenPort, *stateFilePath)
 

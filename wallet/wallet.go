@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"strings"
 
 	sdkTypes "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,7 @@ func NewWallet(_ context.Context, addr string) (*Wallet, error) {
 	config.SetBech32PrefixForAccount(prefix, prefix+"pub")
 	config.SetBech32PrefixForValidator(prefix+"valoper", prefix+"valoperpub")
 	config.SetBech32PrefixForConsensusNode(prefix+"valcons", prefix+"valvalconspub")
+	config.Seal()
 
 	address, err := sdkTypes.GetFromBech32(addr, prefix)
 	if err != nil {
@@ -55,16 +57,29 @@ func NewWallet(_ context.Context, addr string) (*Wallet, error) {
 }
 
 func (w *Wallet) PrintAcc() string {
-	sdkTypes.GetConfig().SetBech32PrefixForAccount(w.config.GetBech32AccountAddrPrefix(), w.config.GetBech32AccountPubPrefix())
-	return w.Acc.String()
+	addrBytes := w.Acc.Bytes()
+
+	bech32Addr, err := bech32.ConvertAndEncode(w.config.GetBech32AccountAddrPrefix(), addrBytes)
+	if err != nil {
+		panic(err)
+	}
+	return bech32Addr
 }
 
 func (w *Wallet) PrintValoper() string {
-	sdkTypes.GetConfig().SetBech32PrefixForValidator(w.config.GetBech32ValidatorAddrPrefix(), w.config.GetBech32ValidatorPubPrefix())
-	return w.Val.String()
+	addrBytes := w.Val.Bytes()
+	bech32Addr, err := bech32.ConvertAndEncode(w.config.GetBech32ValidatorAddrPrefix(), addrBytes)
+	if err != nil {
+		panic(err)
+	}
+	return bech32Addr
 }
 
 func (w *Wallet) PrintCons() string {
-	sdkTypes.GetConfig().SetBech32PrefixForConsensusNode(w.config.GetBech32ConsensusAddrPrefix(), w.config.GetBech32ConsensusPubPrefix())
-	return w.Cons.String()
+	addrBytes := w.Cons.Bytes()
+	bech32Addr, err := bech32.ConvertAndEncode(w.config.GetBech32ConsensusAddrPrefix(), addrBytes)
+	if err != nil {
+		panic(err)
+	}
+	return bech32Addr
 }
