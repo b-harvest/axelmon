@@ -6,8 +6,10 @@ import (
 )
 
 type VotesInfo struct {
-	Status bool   `json:"status"`
-	Missed string `json:"missed"`
+	Missed    string // "3 / 25"
+	MissedCnt int
+	TotalCnt  int
+	Status    bool
 }
 
 type Response struct {
