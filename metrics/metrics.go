@@ -49,7 +49,7 @@ var (
 // --- EVM Votes ---
 
 func SetVMVotes(chain, address, network string, status string, count int) {
-	EVMVotesCounter.With(prometheus.Labels{
+	VMVotesCounter.With(prometheus.Labels{
 		LabelChain:   chain,
 		LabelAddress: address,
 		LabelNetwork: network,
@@ -58,11 +58,11 @@ func SetVMVotes(chain, address, network string, status string, count int) {
 }
 
 func SetVMVotesMissed(chain, address, network string, missCnt int) {
-	SetEVMVotes(chain, address, network, "missed", missCnt)
+	SetVMVotes(chain, address, network, "missed", missCnt)
 }
 
 func SetVMVotesSuccess(chain, address, network string, successCnt int) {
-	SetEVMVotes(chain, address, network, "success", successCnt)
+	SetVMVotes(chain, address, network, "success", successCnt)
 }
 
 // --- EVM Votes ---
