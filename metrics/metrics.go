@@ -5,13 +5,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+const (
+	LabelChain   = "chain"
+	LabelAddress = "address"
+	LabelNetwork = "network"
+	LabelStatus  = "status"
+)
+
 var (
 	EVMVotesCounter = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "evm_votes_total",
 			Help: "Number of EVM votes",
 		},
-		[]string{"chain", "address", "network", "status"},
+		[]string{LabelChain, LabelAddress, LabelNetwork, LabelStatus},
 	)
 
 	MaintainersGauge = promauto.NewGaugeVec(
@@ -19,7 +26,7 @@ var (
 			Name: "maintainers_status_list",
 			Help: "Maintainer's status, 1 is active, 0 is not active",
 		},
-		[]string{"chain", "address", "network"},
+		[]string{LabelChain, LabelAddress, LabelNetwork},
 	)
 
 	HeartbeatsCounter = promauto.NewGaugeVec(
@@ -27,34 +34,53 @@ var (
 			Name: "heartbeats_total",
 			Help: "Heartbeat of the application",
 		},
-		[]string{"chain", "address", "status"},
+		[]string{LabelChain, LabelAddress, LabelStatus},
 	)
-
-	chain   string
-	address string
 )
 
-func Initialize(c, a string) {
-	chain = c
-	address = a
+// --- EVM Votes ---
+
+func SetEVMVotes(chain, address, network string, status string, count int) {
+	EVMVotesCounter.With(prometheus.Labels{
+		LabelChain:   chain,
+		LabelAddress: address,
+		LabelNetwork: network,
+		LabelStatus:  status,
+	}).Set(float64(count))
 }
 
-func SetEVMVotesMissed(targetNetwork string, missCnt int) {
-	EVMVotesCounter.With(prometheus.Labels{"chain": chain, "address": address, "network": targetNetwork, "status": "missed"}).Add(float64(missCnt))
+func SetEVMVotesMissed(chain, address, network string, missCnt int) {
+	SetEVMVotes(chain, address, network, "missed", missCnt)
 }
 
-func SetEVMVotesSuccess(targetNetwork string, successCnt int) {
-	EVMVotesCounter.With(prometheus.Labels{"chain": chain, "address": address, "network": targetNetwork, "status": "success"}).Add(float64(successCnt))
+func SetEVMVotesSuccess(chain, address, network string, successCnt int) {
+	SetEVMVotes(chain, address, network, "success", successCnt)
 }
 
-func SetMaintainersStatus(targetNetwork string, status int) {
-	MaintainersGauge.With(prometheus.Labels{"chain": chain, "address": address, "network": targetNetwork}).Set(float64(status))
+// --- Maintainers ---
+
+func SetMaintainersStatus(chain, address, network string, status int) {
+	MaintainersGauge.With(prometheus.Labels{
+		LabelChain:   chain,
+		LabelAddress: address,
+		LabelNetwork: network,
+	}).Set(float64(status))
 }
 
-func SetHeartbeatsCounterMissed(missCnt int) {
-	HeartbeatsCounter.With(prometheus.Labels{"chain": chain, "address": address, "status": "missed"}).Set(float64(missCnt))
+// --- Heartbeats ---
+
+func SetHeartbeats(chain, address, status string, count int) {
+	HeartbeatsCounter.With(prometheus.Labels{
+		LabelChain:   chain,
+		LabelAddress: address,
+		LabelStatus:  status,
+	}).Set(float64(count))
 }
 
-func SetHeartbeatsCounterSuccess(successCnt int) {
-	HeartbeatsCounter.With(prometheus.Labels{"chain": chain, "address": address, "status": "success"}).Set(float64(successCnt))
+func SetHeartbeatsCounterMissed(chain, address string, missCnt int) {
+	SetHeartbeats(chain, address, "missed", missCnt)
+}
+
+func SetHeartbeatsCounterSuccess(chain, address string, successCnt int) {
+	SetHeartbeats(chain, address, "success", successCnt)
 }
