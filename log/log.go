@@ -60,6 +60,14 @@ func Error(err error) {
 	enqueue(event)
 }
 
+func Errorf(msg string, args ...interface{}) {
+	stack := string(debug.Stack())
+	event := func() {
+		log.Error().Msgf(msg+"\n"+stack, args...)
+	}
+	enqueue(event)
+}
+
 func Debug(msg any) {
 	message := fmt.Sprint(msg)
 	event := func() {
