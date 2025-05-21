@@ -77,10 +77,10 @@ func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingT
 			// Expose metrics per validator per chain
 			if pollingType == api.VM_POLLING_TYPE {
 				metrics.SetVMVotesMissed(c.General.Network, validator, chain.String(), info.MissedCnt)
-				metrics.SetVMVotesSuccess(c.General.Network, validator, chain.String(), info.MissedCnt)
+				metrics.SetVMVotesSuccess(c.General.Network, validator, chain.String(), info.TotalCnt-info.MissedCnt)
 			} else {
 				metrics.SetEVMVotesMissed(c.General.Network, validator, chain.String(), info.MissedCnt)
-				metrics.SetEVMVotesSuccess(c.General.Network, validator, chain.String(), info.MissedCnt)
+				metrics.SetEVMVotesSuccess(c.General.Network, validator, chain.String(), info.TotalCnt-info.MissedCnt)
 			}
 
 			missPercentage := float64(info.MissedCnt) / float64(info.TotalCnt) * 100
