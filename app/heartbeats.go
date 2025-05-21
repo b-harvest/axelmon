@@ -41,8 +41,8 @@ func (c *Config) checkHeartbeats(ctx context.Context) error {
 	}
 
 	server.GlobalState.Heartbeat.Missed = fmt.Sprintf("%d / %d", missCnt, c.Heartbeat.CheckN)
-	metrics.SetHeartbeatsCounterMissed(missCnt)
-	metrics.SetHeartbeatsCounterSuccess(c.Heartbeat.CheckN - missCnt)
+	metrics.SetHeartbeatsCounterMissed(c.General.Network, c.Wallet.Proxy.PrintAcc(), missCnt)
+	metrics.SetHeartbeatsCounterSuccess(c.General.Network, c.Wallet.Proxy.PrintAcc(), c.Heartbeat.CheckN-missCnt)
 	if missCnt >= c.Heartbeat.MissCnt {
 		server.GlobalState.Heartbeat.Status = false
 

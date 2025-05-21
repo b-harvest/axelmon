@@ -54,7 +54,7 @@ func (c *Config) checkMaintainers(ctx context.Context) error {
 		} else {
 			maintainerInNetwork = 0
 		}
-		metrics.SetMaintainersStatus(chain.String(), maintainerInNetwork)
+		metrics.SetMaintainersStatus(c.General.Network, c.Wallet.Proxy.PrintAcc(), chain.String(), maintainerInNetwork)
 	}
 
 	check := true
