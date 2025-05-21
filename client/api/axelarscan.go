@@ -138,7 +138,12 @@ func (c *Client) GetPollingVotes(chain string, size int, pollingType PollingType
 				continue
 			}
 
-			voteRaw, err := json.Marshal(value)
+			valueMap, ok := value.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			voteRaw, err := json.Marshal(valueMap)
 			if err != nil {
 				log.Errorf("marshal vote for %s failed: %v", key, err)
 				continue
@@ -150,11 +155,15 @@ func (c *Client) GetPollingVotes(chain string, size int, pollingType PollingType
 				continue
 			}
 
+			isLate := false
+			if vote.Late != nil {
+				isLate = *vote.Late
+			}
 			v := VoteInfo{
 				Validator:       key,
 				PollID:          safeString(entry["id"]),
 				InitiatedTXHash: safeString(entry["initiated_txhash"]),
-				IsLate:          vote.Late,
+				IsLate:          isLate,
 			}
 
 			switch {

@@ -12,13 +12,12 @@ type VotesRequest struct {
 }
 
 type Voter struct {
-	Late      bool   `json:"late"`
+	Late      *bool  `json:"late,omitempty"`
 	CreatedAt int64  `json:"created_at"`
 	ID        string `json:"id"`
 	Voter     string `json:"voter"`
 	Type      string `json:"type"`
 	Vote      bool   `json:"vote"`
-	Confirmed bool   `json:"confirmed"`
 	Height    int    `json:"height"`
 }
 
