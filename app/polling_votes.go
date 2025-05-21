@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bharvest.io/axelmon/metrics"
 	"context"
 	"fmt"
 	"github.com/axelarnetwork/axelar-core/x/nexus/exported"
@@ -9,7 +10,6 @@ import (
 
 	"bharvest.io/axelmon/client/api"
 	"bharvest.io/axelmon/client/grpc"
-	"bharvest.io/axelmon/metrics"
 	"bharvest.io/axelmon/server"
 )
 
@@ -75,8 +75,13 @@ func (c *Config) checkPollingVotes(ctx context.Context, pollingType api.PollingT
 			info.Missed = fmt.Sprintf("%d / %d", info.MissedCnt, info.TotalCnt)
 
 			// Expose metrics per validator per chain
-			metrics.SetEVMVotesMissed(c.General.Network, validator, chain.String(), info.MissedCnt)
-			metrics.SetEVMVotesSuccess(c.General.Network, validator, chain.String(), info.MissedCnt)
+			if pollingType == api.VM_POLLING_TYPE {
+				metrics.SetVMVotesMissed(c.General.Network, validator, chain.String(), info.MissedCnt)
+				metrics.SetVMVotesSuccess(c.General.Network, validator, chain.String(), info.MissedCnt)
+			} else {
+				metrics.SetEVMVotesMissed(c.General.Network, validator, chain.String(), info.MissedCnt)
+				metrics.SetEVMVotesSuccess(c.General.Network, validator, chain.String(), info.MissedCnt)
+			}
 
 			missPercentage := float64(info.MissedCnt) / float64(info.TotalCnt) * 100
 			if missPercentage > float64(c.PollingVote.MissPercentage) {
